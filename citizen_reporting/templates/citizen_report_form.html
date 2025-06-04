@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report New Issue</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #message { margin-top: 20px; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>Report a New Issue</h1>
+    <form id="reportForm">
+        <div class="form-group">
+            <label for="category">Category:</label>
+            <input type="text" id="category" name="category" required>
+            <!-- Example for select:
+            <select id="category" name="category" required>
+                <option value="">--Please choose an option--</option>
+                <option value="Pothole">Pothole</option>
+                <option value="Streetlight Out">Streetlight Out</option>
+                <option value="Graffiti">Graffiti</option>
+                <option value="Other">Other</option>
+            </select>
+            -->
+        </div>
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" rows="4" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="latitude">Latitude:</label>
+            <input type="number" id="latitude" name="latitude" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="longitude">Longitude:</label>
+            <input type="number" id="longitude" name="longitude" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="reporter_id">Reporter ID (Optional):</label>
+            <input type="text" id="reporter_id" name="reporter_id">
+        </div>
+        <div class="form-group">
+            <label for="photo_filename">Photo Filename (Optional):</label>
+            <input type="text" id="photo_filename" name="photo_filename">
+        </div>
+        <button type="submit">Submit Report</button>
+    </form>
+    <div id="message"></div>
+
+    <script>
+        document.getElementById('reportForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = '';
+            messageDiv.className = '';
+
+            const formData = {
+                category: document.getElementById('category').value,
+                description: document.getElementById('description').value,
+                location: {
+                    lat: parseFloat(document.getElementById('latitude').value),
+                    lon: parseFloat(document.getElementById('longitude').value)
+                },
+                reporter_id: document.getElementById('reporter_id').value || null,
+                photo_filename: document.getElementById('photo_filename').value || null
+            };
+
+            // Basic validation for optional fields to ensure they are not empty strings if provided
+            if (formData.reporter_id === "") formData.reporter_id = null;
+            if (formData.photo_filename === "") formData.photo_filename = null;
+
+
+            try {
+                const response = await fetch('/issues', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    messageDiv.textContent = 'Issue reported successfully! Issue ID: ' + result.issue_id;
+                    messageDiv.className = 'success';
+                    document.getElementById('reportForm').reset(); // Clear form
+                } else {
+                    messageDiv.textContent = 'Error reporting issue: ' + (result.error || response.statusText);
+                    messageDiv.className = 'error';
+                }
+            } catch (error) {
+                messageDiv.textContent = 'Network error: ' + error.message;
+                messageDiv.className = 'error';
+            }
+        });
+    </script>
+</body>
+</html>

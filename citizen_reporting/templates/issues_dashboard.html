@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Issues Dashboard</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; margin-bottom: 20px; }
+        button:hover { background-color: #0056b3; }
+        .filter-group { margin-bottom: 10px; }
+        .filter-group label { margin-right: 5px;}
+        .filter-group input, .filter-group select { padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Issues Dashboard</h1>
+
+    <div class="filter-group">
+        <label for="statusFilter">Filter by Status:</label>
+        <input type="text" id="statusFilter" placeholder="e.g., OPEN">
+        <label for="categoryFilter">Filter by Category:</label>
+        <input type="text" id="categoryFilter" placeholder="e.g., Pothole">
+        <button onclick="fetchIssues()">Apply Filters & Refresh</button>
+    </div>
+
+    <button onclick="fetchIssues(true)">Refresh List</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Issue ID</th>
+                <th>Timestamp</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Location (Lat, Lon)</th>
+                <th>Status</th>
+                <th>Reporter ID</th>
+                <th>Photo</th>
+                <th>Last Updated</th>
+            </tr>
+        </thead>
+        <tbody id="issuesTableBody">
+            <!-- Issues will be populated here by JavaScript -->
+        </tbody>
+    </table>
+
+    <script>
+        const issuesTableBody = document.getElementById('issuesTableBody');
+        const statusFilterInput = document.getElementById('statusFilter');
+        const categoryFilterInput = document.getElementById('categoryFilter');
+
+        async function fetchIssues(isRefreshButton = false) {
+            let url = '/issues';
+            const params = new URLSearchParams();
+
+            if (!isRefreshButton) { // Apply filters only if not the main refresh button
+                const status = statusFilterInput.value.trim();
+                const category = categoryFilterInput.value.trim();
+                if (status) {
+                    params.append('status', status);
+                }
+                if (category) {
+                    params.append('category', category);
+                }
+            }
+
+            if (params.toString()) {
+                url += `?${params.toString()}`;
+            }
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    issuesTableBody.innerHTML = `<tr><td colspan="9">Error fetching issues: ${response.statusText}</td></tr>`;
+                    return;
+                }
+                const issues = await response.json();
+                populateTable(issues);
+            } catch (error) {
+                issuesTableBody.innerHTML = `<tr><td colspan="9">Network error: ${error.message}</td></tr>`;
+            }
+        }
+
+        function populateTable(issues) {
+            issuesTableBody.innerHTML = ''; // Clear existing rows
+            if (issues.length === 0) {
+                issuesTableBody.innerHTML = '<tr><td colspan="9">No issues found.</td></tr>';
+                return;
+            }
+
+            issues.forEach(issue => {
+                const row = issuesTableBody.insertRow();
+                row.insertCell().textContent = issue.issue_id;
+                row.insertCell().textContent = new Date(issue.timestamp).toLocaleString();
+                row.insertCell().textContent = issue.category;
+                row.insertCell().textContent = issue.description;
+                row.insertCell().textContent = `${issue.location.lat}, ${issue.location.lon}`;
+                row.insertCell().textContent = issue.status;
+                row.insertCell().textContent = issue.reporter_id || 'N/A';
+                row.insertCell().textContent = issue.photo_filename || 'N/A';
+                row.insertCell().textContent = new Date(issue.last_updated).toLocaleString();
+            });
+        }
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => fetchIssues(true)); // Load all issues initially
+    </script>
+</body>
+</html>

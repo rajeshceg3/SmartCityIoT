@@ -76,3 +76,79 @@ python -m unittest waste_management.tests.test_bin_manager
 python -m unittest waste_management.tests.test_route_manager
 ```
 *(Note: Test execution may face timeouts in some sandboxed environments.)*
+
+---
+
+## Feature: Citizen Reporting & Issue Tracking Platform
+
+This platform enables citizens to report various non-emergency issues (e.g., potholes, broken streetlights) within the city. City officials can then use the system to track and manage these reported issues.
+
+### Overview
+
+The system includes:
+*   **Data Model**: For `ReportedIssue` (capturing details like category, description, location, status, etc.).
+*   **Core Logic**: `issue_manager` for creating, retrieving, listing, and updating issues.
+*   **Flask API**: Exposes endpoints for issue management.
+*   **Simple Web Interface**:
+    *   A form for citizens to submit new issue reports.
+    *   A dashboard to view and filter all reported issues.
+*   **Unit Tests**: For the `issue_manager` module.
+
+### Prerequisites
+
+*   Python 3.x
+*   Flask (`pip install Flask`)
+
+### Running the Application (Citizen Reporting)
+
+1.  Navigate to the project directory.
+2.  To start the Flask API server for the citizen reporting module:
+    ```bash
+    python -m citizen_reporting.api
+    ```
+    The server will typically start on `http://127.0.0.1:5001/`.
+
+### Accessing the Web Interface
+
+Once the Citizen Reporting API server is running, you can access the web pages:
+
+*   **Report an Issue**: `http://127.0.0.1:5001/citizen`
+*   **View Issues Dashboard**: `http://127.0.0.1:5001/citizen/dashboard`
+
+### API Endpoints (Citizen Reporting)
+
+All API endpoints are prefixed with the base URL `http://127.0.0.1:5001`.
+
+*   **Create a new issue**
+    *   `POST /issues`
+    *   Payload: `{"category": "str", "description": "str", "location": {"lat": float, "lon": float}, "reporter_id": "str" (optional), "photo_filename": "str" (optional)}`
+    *   Example Response (201 Created): `{"issue_id": "uuid", "timestamp": "datetime", "category": "...", ...}`
+
+*   **List all issues**
+    *   `GET /issues`
+    *   Optional Query Parameters:
+        *   `status`: e.g., `/issues?status=OPEN`
+        *   `category`: e.g., `/issues?category=Pothole`
+    *   Example Response (200 OK): `[{"issue_id": "...", ...}, ...]`
+
+*   **Get details of a specific issue**
+    *   `GET /issues/<issue_id>`
+    *   Example Response (200 OK): `{"issue_id": "...", ...}`
+
+*   **Update an issue's status**
+    *   `PUT /issues/<issue_id>/status`
+    *   Payload: `{"status": "str"}` (e.g., "IN_PROGRESS", "RESOLVED", "CLOSED")
+    *   Example Response (200 OK): `{"issue_id": "...", "status": "NEW_STATUS", ...}`
+
+### Running Unit Tests (Citizen Reporting)
+
+Unit tests for the citizen reporting module are located in `citizen_reporting/tests/`.
+
+To run these specific tests using Python's `unittest` module (from the project root):
+```bash
+python -m unittest citizen_reporting.tests.test_issue_manager
+```
+Alternatively, to discover and run all tests within the `citizen_reporting/tests` directory:
+```bash
+python -m unittest discover -s citizen_reporting/tests -v
+```
