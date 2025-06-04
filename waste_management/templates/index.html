@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Waste Management Dashboard</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        h1, h2 { color: #2c3e50; }
+        div { margin-bottom: 20px; padding: 15px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button { padding: 10px 15px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+        button:hover { background-color: #2980b9; }
+        input[type="text"] { padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin-right: 10px; }
+        label { margin-right: 5px; }
+        #generate-route-message { margin-top: 10px; font-weight: bold; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Smart Waste Management Dashboard</h1>
+
+    <h2>Bins</h2>
+    <button id="refresh-bins">Refresh Bins</button>
+    <div id="bins-list">
+        <p>Loading bins...</p>
+    </div>
+
+    <h2>Routes</h2>
+    <button id="refresh-routes">Refresh Routes</button>
+    <div id="routes-list">
+        <p>Loading routes...</p>
+    </div>
+
+    <h2>Generate Route</h2>
+    <div>
+        <label for="truck-id">Truck ID:</label>
+        <input type="text" id="truck-id" value="truck001">
+        <button id="generate-route">Generate Route</button>
+        <div id="generate-route-message"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchBins();
+            fetchRoutes();
+
+            document.getElementById('refresh-bins').addEventListener('click', fetchBins);
+            document.getElementById('refresh-routes').addEventListener('click', fetchRoutes);
+            document.getElementById('generate-route').addEventListener('click', generateRoute);
+        });
+
+        async function fetchBins() {
+            const binsListDiv = document.getElementById('bins-list');
+            binsListDiv.innerHTML = '<p>Loading bins...</p>'; // Show loading message
+            try {
+                const response = await fetch('/bins');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const bins = await response.json();
+                binsListDiv.innerHTML = ''; // Clear loading message
+                if (bins.length === 0) {
+                    binsListDiv.innerHTML = '<p>No bins found.</p>';
+                } else {
+                    bins.forEach(bin => {
+                        const p = document.createElement('p');
+                        p.textContent = `ID: ${bin.bin_id}, Location: (${bin.location.lat}, ${bin.location.lon}), Fill: ${bin.current_fill_level_gallons.toFixed(2)}/${bin.capacity_gallons.toFixed(2)} gallons, Status: ${bin.status}, Updated: ${new Date(bin.last_updated).toLocaleString()}`;
+                        binsListDiv.appendChild(p);
+                    });
+                }
+            } catch (error) {
+                binsListDiv.innerHTML = `<p class="error">Error fetching bins: ${error.message}</p>`;
+                console.error('Error fetching bins:', error);
+            }
+        }
+
+        async function fetchRoutes() {
+            const routesListDiv = document.getElementById('routes-list');
+            routesListDiv.innerHTML = '<p>Loading routes...</p>';
+            try {
+                const response = await fetch('/routes');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const routes = await response.json();
+                routesListDiv.innerHTML = '';
+                if (routes.length === 0) {
+                    routesListDiv.innerHTML = '<p>No routes found.</p>';
+                } else {
+                    routes.forEach(route => {
+                        const p = document.createElement('p');
+                        p.textContent = `ID: ${route.route_id}, Truck: ${route.assigned_truck_id}, Status: ${route.status}, Bins: ${route.bin_ids_to_collect.join(', ')}, Generated: ${new Date(route.generated_at).toLocaleString()}`;
+                        if(route.started_at) p.textContent += `, Started: ${new Date(route.started_at).toLocaleString()}`;
+                        if(route.completed_at) p.textContent += `, Completed: ${new Date(route.completed_at).toLocaleString()}`;
+                        routesListDiv.appendChild(p);
+                    });
+                }
+            } catch (error) {
+                routesListDiv.innerHTML = `<p class="error">Error fetching routes: ${error.message}</p>`;
+                console.error('Error fetching routes:', error);
+            }
+        }
+
+        async function generateRoute() {
+            const truckId = document.getElementById('truck-id').value;
+            const messageDiv = document.getElementById('generate-route-message');
+            messageDiv.textContent = 'Generating route...';
+            messageDiv.className = ''; // Reset class
+
+            if (!truckId) {
+                messageDiv.textContent = 'Truck ID cannot be empty.';
+                messageDiv.className = 'error';
+                return;
+            }
+
+            try {
+                const response = await fetch('/routes/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ assigned_truck_id: truckId }),
+                });
+
+                const result = await response.json(); // Try to parse JSON regardless of response.ok for messages
+
+                if (!response.ok) {
+                    // For non-OK responses, result might contain an "error" field from the API
+                    const errorMsg = result.error || `HTTP error! status: ${response.status}`;
+                    throw new Error(errorMsg);
+                }
+
+                // Handle 201 Created (new route) vs 200 OK (no route generated, with message)
+                if (response.status === 201) {
+                     messageDiv.textContent = `Route ${result.route_id} generated successfully for truck ${result.assigned_truck_id}. Bins: ${result.bin_ids_to_collect.join(', ')}.`;
+                     messageDiv.className = 'success';
+                } else if (response.status === 200 && result.message) {
+                     messageDiv.textContent = result.message; // e.g., "No full bins..."
+                     messageDiv.className = ''; // Neutral message
+                } else { // Should not happen if API adheres to spec
+                     messageDiv.textContent = 'Route generation status unknown.';
+                     messageDiv.className = 'error';
+                }
+                fetchRoutes(); // Refresh the routes list
+                fetchBins(); // Also refresh bins, as their status might eventually change (though not directly by generation)
+            } catch (error) {
+                messageDiv.textContent = `Error generating route: ${error.message}`;
+                messageDiv.className = 'error';
+                console.error('Error generating route:', error);
+            }
+        }
+    </script>
+</body>
+</html>
