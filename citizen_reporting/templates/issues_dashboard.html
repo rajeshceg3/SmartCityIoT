@@ -5,109 +5,459 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Issues Dashboard</title>
     <style>
-        body { font-family: sans-serif; margin: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; margin-bottom: 20px; }
-        button:hover { background-color: #0056b3; }
-        .filter-group { margin-bottom: 10px; }
-        .filter-group label { margin-right: 5px;}
-        .filter-group input, .filter-group select { padding: 5px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            width: 95%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+        .controls-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background-color: #fdfdfd;
+            border-radius: 6px;
+            border: 1px solid #e7e7e7;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 180px; /* Minimum width for filter groups */
+        }
+        .filter-group label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9em;
+        }
+        .filter-group input[type="date"],
+        .filter-group select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+        .buttons-group {
+            display: flex;
+            align-items: flex-end; /* Align buttons to the bottom of their flex container */
+            gap: 10px;
+        }
+        button {
+            padding: 10px 18px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.secondary {
+            background-color: #6c757d;
+        }
+        button.secondary:hover {
+            background-color: #545b62;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 0.95em;
+        }
+        th {
+            background-color: #f0f2f5;
+            font-weight: 600;
+            cursor: pointer; /* For sorting */
+            position: relative;
+        }
+        th .sort-indicator { /* For sort arrows */
+            margin-left: 5px;
+            font-size: 0.8em;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 25px;
+            gap: 10px;
+        }
+        .pagination-controls button {
+            padding: 8px 12px;
+        }
+        .pagination-controls span {
+            font-size: 0.95em;
+        }
+        .no-preview {
+            color: #777;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-    <h1>Issues Dashboard</h1>
+    <div class="container">
+        <h1>Issues Dashboard</h1>
 
-    <div class="filter-group">
-        <label for="statusFilter">Filter by Status:</label>
-        <input type="text" id="statusFilter" placeholder="e.g., OPEN">
-        <label for="categoryFilter">Filter by Category:</label>
-        <input type="text" id="categoryFilter" placeholder="e.g., Pothole">
-        <button onclick="fetchIssues()">Apply Filters & Refresh</button>
+        <div class="controls-container">
+            <div class="filter-group">
+                <label for="startDateFilter">Start Date:</label>
+                <input type="date" id="startDateFilter">
+            </div>
+            <div class="filter-group">
+                <label for="endDateFilter">End Date:</label>
+                <input type="date" id="endDateFilter">
+            </div>
+            <div class="filter-group">
+                <label for="statusFilter">Status:</label>
+                <select id="statusFilter">
+                    <option value="">All</option>
+                    <option value="OPEN">Open</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="RESOLVED">Resolved</option>
+                    <option value="CLOSED">Closed</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="categoryFilter">Category:</label>
+                <select id="categoryFilter">
+                    <option value="">All</option>
+                    <option value="Pothole">Pothole</option>
+                    <option value="Streetlight Out">Streetlight Out</option>
+                    <option value="Graffiti">Graffiti</option>
+                    <option value="Trash Overflow">Trash Overflow</option>
+                    <option value="Damaged Signage">Damaged Signage</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="buttons-group">
+                <button id="applyFiltersButton">Apply Filters</button>
+                <button id="clearFiltersButton" class="secondary">Clear Filters & Load All</button>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th data-sort-key="issue_id">Issue ID <span class="sort-indicator"></span></th>
+                    <th data-sort-key="timestamp">Timestamp <span class="sort-indicator"></span></th>
+                    <th data-sort-key="category">Category <span class="sort-indicator"></span></th>
+                    <th>Description</th> {/* No sorting for description for now */}
+                    <th>Location (Lat, Lon)</th> {/* No sorting for location for now */}
+                    <th data-sort-key="status">Status <span class="sort-indicator"></span></th>
+                    <th>Reporter ID</th> {/* No sorting for reporter_id for now */}
+                    <th>Photo</th>
+                    <th data-sort-key="last_updated">Last Updated <span class="sort-indicator"></span></th>
+                </tr>
+            </thead>
+            <tbody id="issuesTableBody">
+                <!-- Issues will be populated here by JavaScript -->
+            </tbody>
+        </table>
+
+        <div class="pagination-controls">
+            <button id="prevPageButton" disabled>Previous</button>
+            <span id="pageInfo">Page 1 of 1</span>
+            <button id="nextPageButton" disabled>Next</button>
+        </div>
     </div>
 
-    <button onclick="fetchIssues(true)">Refresh List</button>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Issue ID</th>
-                <th>Timestamp</th>
-                <th>Category</th>
-                <th>Description</th>
-                <th>Location (Lat, Lon)</th>
-                <th>Status</th>
-                <th>Reporter ID</th>
-                <th>Photo</th>
-                <th>Last Updated</th>
-            </tr>
-        </thead>
-        <tbody id="issuesTableBody">
-            <!-- Issues will be populated here by JavaScript -->
-        </tbody>
-    </table>
-
     <script>
+        // JavaScript will be substantially updated in next steps
         const issuesTableBody = document.getElementById('issuesTableBody');
-        const statusFilterInput = document.getElementById('statusFilter');
-        const categoryFilterInput = document.getElementById('categoryFilter');
+        // Filter inputs (will be properly selected later)
+        // const statusFilterInput = document.getElementById('statusFilter');
+        // const categoryFilterInput = document.getElementById('categoryFilter');
 
-        async function fetchIssues(isRefreshButton = false) {
-            let url = '/issues';
-            const params = new URLSearchParams();
+        let allIssues = []; // To store all fetched issues locally
+        let currentSortKey = 'timestamp'; // Default sort
+        let currentSortDirection = 'desc'; // Default direction
+        let currentPage = 1;
+        const issuesPerPage = 10; // Example: 10 issues per page
 
-            if (!isRefreshButton) { // Apply filters only if not the main refresh button
-                const status = statusFilterInput.value.trim();
-                const category = categoryFilterInput.value.trim();
-                if (status) {
-                    params.append('status', status);
-                }
-                if (category) {
-                    params.append('category', category);
-                }
-            }
+        async function initialLoad() {
+            // This function will be responsible for the first data fetch
+            // and then calling a function to render everything.
+            // For now, just a placeholder for the old fetchIssues(true)
+            await fetchAndStoreIssues();
+            renderUI();
+        }
 
-            if (params.toString()) {
-                url += `?${params.toString()}`;
-            }
-
+        async function fetchAndStoreIssues() {
+            // This function will fetch all issues and store them.
+            // Filters will not be applied at fetch time anymore, but on the client side.
+            const url = '/issues'; // Fetch all issues
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
                     issuesTableBody.innerHTML = `<tr><td colspan="9">Error fetching issues: ${response.statusText}</td></tr>`;
+                    allIssues = []; // Ensure local cache is cleared on error
                     return;
                 }
-                const issues = await response.json();
-                populateTable(issues);
+                allIssues = await response.json();
+                // Optionally, pre-sort by default
+                sortIssues(currentSortKey, currentSortDirection, false);
             } catch (error) {
                 issuesTableBody.innerHTML = `<tr><td colspan="9">Network error: ${error.message}</td></tr>`;
+                allIssues = []; // Ensure local cache is cleared on error
             }
         }
 
-        function populateTable(issues) {
+        function applyAllFiltersAndRender() {
+            // 1. Get filter values
+            // 2. Filter 'allIssues'
+            // 3. Sort the filtered list
+            // 4. Paginate
+            // 5. Render table and pagination controls
+            // This function will be the main driver after initial load or when filters change.
+            renderUI(); // Placeholder
+        }
+
+        function renderUI() {
+            // This function will orchestrate filtering, sorting, pagination, and table rendering.
+            // For now, it's a simplified version.
+
+            let processedIssues = [...allIssues]; // Start with a copy
+
+            // Step 1: Apply Filters (to be implemented)
+            const statusFilter = document.getElementById('statusFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const startDateFilter = document.getElementById('startDateFilter').value;
+            const endDateFilter = document.getElementById('endDateFilter').value;
+
+            processedIssues = processedIssues.filter(issue => {
+                let passStatus = true;
+                let passCategory = true;
+                let passDate = true;
+
+                if (statusFilter) {
+                    passStatus = issue.status === statusFilter;
+                }
+                if (categoryFilter) {
+                    passCategory = issue.category === categoryFilter;
+                }
+                if (startDateFilter) {
+                    passDate = passDate && (new Date(issue.timestamp) >= new Date(startDateFilter));
+                }
+                if (endDateFilter) {
+                    // Adjust end date to include the whole day
+                    const endOfDay = new Date(endDateFilter);
+                    endOfDay.setHours(23, 59, 59, 999);
+                    passDate = passDate && (new Date(issue.timestamp) <= endOfDay);
+                }
+                return passStatus && passCategory && passDate;
+            });
+
+            // Step 2: Sort (already sorted if currentSortKey/Direction is set, or re-sort)
+            // The 'allIssues' array might be pre-sorted or we sort 'processedIssues' here.
+            // For simplicity, we assume sortIssues modifies 'processedIssues' or we re-assign.
+            sortIssues(currentSortKey, currentSortDirection, false, processedIssues); // Sort the filtered list
+
+            // Step 3: Paginate
+            const totalPages = Math.ceil(processedIssues.length / issuesPerPage);
+            currentPage = Math.min(currentPage, totalPages) || 1; // Ensure current page is valid
+            const paginatedIssues = processedIssues.slice((currentPage - 1) * issuesPerPage, currentPage * issuesPerPage);
+
+            // Step 4: Render table
+            populateTable(paginatedIssues);
+
+            // Step 5: Update pagination controls
+            updatePaginationControls(totalPages);
+        }
+
+
+        function populateTable(issuesToDisplay) {
             issuesTableBody.innerHTML = ''; // Clear existing rows
-            if (issues.length === 0) {
-                issuesTableBody.innerHTML = '<tr><td colspan="9">No issues found.</td></tr>';
+            if (issuesToDisplay.length === 0) {
+                issuesTableBody.innerHTML = '<tr><td colspan="9">No issues found matching your criteria.</td></tr>';
                 return;
             }
 
-            issues.forEach(issue => {
+            issuesToDisplay.forEach(issue => {
                 const row = issuesTableBody.insertRow();
                 row.insertCell().textContent = issue.issue_id;
                 row.insertCell().textContent = new Date(issue.timestamp).toLocaleString();
                 row.insertCell().textContent = issue.category;
-                row.insertCell().textContent = issue.description;
-                row.insertCell().textContent = `${issue.location.lat}, ${issue.location.lon}`;
+                row.insertCell().textContent = issue.description.length > 75 ? issue.description.substring(0, 72) + "..." : issue.description; // Truncate
+                row.insertCell().textContent = `${issue.location.lat.toFixed(5)}, ${issue.location.lon.toFixed(5)}`; // Format coords
                 row.insertCell().textContent = issue.status;
                 row.insertCell().textContent = issue.reporter_id || 'N/A';
-                row.insertCell().textContent = issue.photo_filename || 'N/A';
+
+                const photoCell = row.insertCell();
+                if (issue.photo_filename) {
+                    const photoLink = document.createElement('a');
+                    photoLink.href = `/uploads/${issue.photo_filename}`; // As per bonus requirement
+                    photoLink.textContent = issue.photo_filename;
+                    photoLink.target = "_blank"; // Open in new tab
+                    photoCell.appendChild(photoLink);
+                } else {
+                    photoCell.textContent = 'N/A';
+                }
                 row.insertCell().textContent = new Date(issue.last_updated).toLocaleString();
             });
         }
 
-        // Initial load
-        document.addEventListener('DOMContentLoaded', () => fetchIssues(true)); // Load all issues initially
+        function sortIssues(key, direction, isUserClick = true, issuesArray = allIssues) {
+            // isUserClick is true if a header was clicked, false for programmatic sort
+            // issuesArray is the array to sort (could be allIssues or a filtered subset)
+            if (isUserClick) {
+                if (key === currentSortKey) {
+                    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSortKey = key;
+                    currentSortDirection = 'asc'; // Default to asc when changing column
+                }
+            } else { // Programmatic sort (e.g. initial load)
+                currentSortKey = key;
+                currentSortDirection = direction;
+            }
+
+            issuesArray.sort((a, b) => {
+                let valA = a[key];
+                let valB = b[key];
+
+                // Handle date sorting correctly
+                if (key === 'timestamp' || key === 'last_updated') {
+                    valA = new Date(valA).getTime();
+                    valB = new Date(valB).getTime();
+                } else if (typeof valA === 'string') {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                }
+                // Could add more type handling here (numbers, etc.)
+
+                if (valA < valB) return direction === 'asc' ? -1 : 1;
+                if (valA > valB) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            updateSortIndicators();
+            if (isUserClick) { // Re-render only if user clicked, otherwise it's part of a larger render flow
+                 currentPage = 1; // Reset to first page on sort
+                 renderUI();
+            }
+        }
+
+        function updateSortIndicators() {
+            document.querySelectorAll("th[data-sort-key]").forEach(th => {
+                const indicator = th.querySelector(".sort-indicator");
+                if (th.dataset.sortKey === currentSortKey) {
+                    indicator.textContent = currentSortDirection === 'asc' ? '▲' : '▼';
+                } else {
+                    indicator.textContent = '';
+                }
+            });
+        }
+
+        function updatePaginationControls(totalPages) {
+            const pageInfo = document.getElementById('pageInfo');
+            const prevButton = document.getElementById('prevPageButton');
+            const nextButton = document.getElementById('nextPageButton');
+
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
+            prevButton.disabled = currentPage === 1;
+            nextButton.disabled = currentPage === totalPages || totalPages === 0;
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', initialLoad);
+
+        document.getElementById('applyFiltersButton').addEventListener('click', () => {
+            currentPage = 1; // Reset to first page on new filter application
+            renderUI();
+        });
+
+        document.getElementById('clearFiltersButton').addEventListener('click', () => {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('startDateFilter').value = '';
+            document.getElementById('endDateFilter').value = '';
+            currentPage = 1;
+            currentSortKey = 'timestamp'; // Reset to default sort
+            currentSortDirection = 'desc';
+            // fetchAndStoreIssues(); // Optionally re-fetch, or just use existing allIssues
+            sortIssues(currentSortKey, currentSortDirection, false); // Reset sort on allIssues
+            renderUI();
+        });
+
+        document.querySelectorAll("th[data-sort-key]").forEach(th => {
+            th.addEventListener('click', () => {
+                sortIssues(th.dataset.sortKey, '', true); // Let sortIssues toggle direction
+            });
+        });
+
+        document.getElementById('prevPageButton').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderUI();
+            }
+        });
+
+        document.getElementById('nextPageButton').addEventListener('click', () => {
+            // Calculate total pages again based on current filters for safety, though renderUI does it too
+            const statusFilter = document.getElementById('statusFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const startDateFilter = document.getElementById('startDateFilter').value;
+            const endDateFilter = document.getElementById('endDateFilter').value;
+
+            let filteredIssues = allIssues.filter(issue => {
+                 let passStatus = true;
+                let passCategory = true;
+                let passDate = true;
+                if (statusFilter) passStatus = issue.status === statusFilter;
+                if (categoryFilter) passCategory = issue.category === categoryFilter;
+                if (startDateFilter) passDate = passDate && (new Date(issue.timestamp) >= new Date(startDateFilter));
+                if (endDateFilter) {
+                    const endOfDay = new Date(endDateFilter);
+                    endOfDay.setHours(23, 59, 59, 999);
+                    passDate = passDate && (new Date(issue.timestamp) <= endOfDay);
+                }
+                return passStatus && passCategory && passDate;
+            });
+            const totalPages = Math.ceil(filteredIssues.length / issuesPerPage);
+
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderUI();
+            }
+        });
+
     </script>
 </body>
 </html>
