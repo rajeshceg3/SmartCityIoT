@@ -5,83 +5,340 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Report New Issue</title>
     <style>
-        body { font-family: sans-serif; margin: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; }
-        input[type="text"], input[type="number"], textarea, select {
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
             width: 100%;
-            padding: 8px;
+            max-width: 600px; /* Max width for the form */
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             box-sizing: border-box;
         }
-        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        #message { margin-top: 20px; padding: 10px; border-radius: 5px; }
-        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        textarea {
+            resize: vertical; /* Allow vertical resize */
+        }
+        button[type="submit"] {
+            width: 100%;
+            padding: 12px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        #message {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 16px;
+            text-align: center;
+            display: none; /* Hidden by default */
+            position: relative; /* For dismiss button */
+        }
+        .message-dismiss {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: inherit; /* Inherit color from parent (.success or .error) */
+            cursor: pointer;
+        }
+        .success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+            display: block;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+            display: block;
+        }
+        .validation-error {
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* Styling for fields explicitly marked as invalid by JavaScript */
+        input.invalid,
+        select.invalid,
+        textarea.invalid {
+             border-color: #dc3545 !important; /* Use important to override default focus styles if necessary */
+        }
+         /* Styling for fields explicitly marked as valid by JavaScript (optional) */
+        input.valid,
+        select.valid,
+        textarea.valid {
+             border-color: #28a745; /* Green border for valid fields */
+        }
+
     </style>
 </head>
 <body>
-    <h1>Report a New Issue</h1>
-    <form id="reportForm">
-        <div class="form-group">
-            <label for="category">Category:</label>
-            <input type="text" id="category" name="category" required>
-            <!-- Example for select:
-            <select id="category" name="category" required>
-                <option value="">--Please choose an option--</option>
-                <option value="Pothole">Pothole</option>
-                <option value="Streetlight Out">Streetlight Out</option>
-                <option value="Graffiti">Graffiti</option>
-                <option value="Other">Other</option>
-            </select>
-            -->
-        </div>
-        <div class="form-group">
-            <label for="description">Description:</label>
-            <textarea id="description" name="description" rows="4" required></textarea>
-        </div>
-        <div class="form-group">
-            <label for="latitude">Latitude:</label>
-            <input type="number" id="latitude" name="latitude" step="any" required>
-        </div>
-        <div class="form-group">
-            <label for="longitude">Longitude:</label>
-            <input type="number" id="longitude" name="longitude" step="any" required>
-        </div>
-        <div class="form-group">
-            <label for="reporter_id">Reporter ID (Optional):</label>
-            <input type="text" id="reporter_id" name="reporter_id">
-        </div>
-        <div class="form-group">
-            <label for="photo_filename">Photo Filename (Optional):</label>
-            <input type="text" id="photo_filename" name="photo_filename">
-        </div>
-        <button type="submit">Submit Report</button>
-    </form>
-    <div id="message"></div>
+    <div class="container">
+        <h1>Report a New Issue</h1>
+        <form id="reportForm" novalidate>
+            <div class="form-group">
+                <label for="category">Category:</label>
+                <select id="category" name="category" required>
+                    <option value="">--Please choose an option--</option>
+                    <option value="Pothole">Pothole</option>
+                    <option value="Streetlight Out">Streetlight Out</option>
+                    <option value="Graffiti">Graffiti</option>
+                    <option value="Trash Overflow">Trash Overflow</option>
+                    <option value="Damaged Signage">Damaged Signage</option>
+                    <option value="Other">Other</option>
+                </select>
+                <div class="validation-error" id="category-error"></div>
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" rows="4" required maxlength="500"></textarea>
+                <div id="description-counter" style="font-size: 0.8em; text-align: right; color: #666;">0/500</div>
+                <div class="validation-error" id="description-error"></div>
+            </div>
+            <div class="form-group">
+                <label for="latitude">Latitude:</label>
+                <input type="number" id="latitude" name="latitude" step="any" required min="-90" max="90">
+                <div class="validation-error" id="latitude-error"></div>
+            </div>
+            <div class="form-group">
+                <label for="longitude">Longitude:</label>
+                <input type="number" id="longitude" name="longitude" step="any" required min="-180" max="180">
+                <div class="validation-error" id="longitude-error"></div>
+            </div>
+            <div class="form-group">
+                <label for="reporter_id">Reporter ID (Optional):</label>
+                <input type="text" id="reporter_id" name="reporter_id">
+            </div>
+            <div class="form-group">
+                <label for="photo_filename">Photo Filename (Optional):</label>
+                <input type="text" id="photo_filename" name="photo_filename">
+            </div>
+            <button type="submit">Submit Report</button>
+        </form>
+        <div id="message"></div>
+    </div>
 
     <script>
-        document.getElementById('reportForm').addEventListener('submit', async function(event) {
+        const reportForm = document.getElementById('reportForm');
+        const messageDiv = document.getElementById('message');
+        const submitButton = reportForm.querySelector('button[type="submit"]');
+
+        const categoryField = document.getElementById('category');
+        const descriptionTextarea = document.getElementById('description');
+        const latitudeField = document.getElementById('latitude');
+        const longitudeField = document.getElementById('longitude');
+
+        const categoryError = document.getElementById('category-error');
+        const descriptionError = document.getElementById('description-error');
+        const latitudeError = document.getElementById('latitude-error');
+        const longitudeError = document.getElementById('longitude-error');
+        const descriptionCounter = document.getElementById('description-counter');
+
+        function clearValidationStyles() {
+            // Remove .invalid and .valid classes from all fields
+            [categoryField, descriptionTextarea, latitudeField, longitudeField].forEach(field => {
+                field.classList.remove('invalid');
+                field.classList.remove('valid');
+            });
+        }
+
+        function clearValidationMessages() {
+            categoryError.textContent = '';
+            descriptionError.textContent = '';
+            latitudeError.textContent = '';
+            longitudeError.textContent = '';
+            clearValidationStyles(); // Also clear styles
+        }
+
+        function markFieldValid(field) {
+            field.classList.remove('invalid');
+            field.classList.add('valid');
+        }
+
+        function markFieldInvalid(field, errorElement, message) {
+            field.classList.add('invalid');
+            field.classList.remove('valid');
+            if (errorElement) { // Not all fields might have a dedicated error element if we simplify
+                 errorElement.textContent = message;
+            }
+        }
+
+        function validateForm() {
+            clearValidationStyles(); // Clear previous validation styles before re-validating
+            let isValid = true;
+            // reportForm.classList.add('submitted'); // Not strictly needed anymore with JS based styling
+
+            // Category
+            if (categoryField.validity.valueMissing) {
+                markFieldInvalid(categoryField, categoryError, 'Please select a category.');
+                isValid = false;
+            } else {
+                markFieldValid(categoryField);
+            }
+
+            // Description
+            if (descriptionTextarea.validity.valueMissing) {
+                markFieldInvalid(descriptionTextarea, descriptionError, 'Description is required.');
+                isValid = false;
+            } else if (descriptionTextarea.validity.tooLong) {
+                markFieldInvalid(descriptionTextarea, descriptionError, `Description must be ${descriptionTextarea.maxLength} characters or less. Current: ${descriptionTextarea.value.length}`);
+                isValid = false;
+            } else {
+                markFieldValid(descriptionTextarea);
+            }
+
+            // Latitude
+            if (latitudeField.validity.valueMissing) {
+                markFieldInvalid(latitudeField, latitudeError, 'Latitude is required.');
+                isValid = false;
+            } else if (latitudeField.validity.rangeUnderflow || latitudeField.validity.rangeOverflow) {
+                markFieldInvalid(latitudeField, latitudeError, `Latitude must be between ${latitudeField.min} and ${latitudeField.max}.`);
+                isValid = false;
+            } else if (latitudeField.validity.badInput || isNaN(parseFloat(latitudeField.value))) {
+                 markFieldInvalid(latitudeField, latitudeError, 'Please enter a valid number for latitude.');
+                 isValid = false;
+            } else {
+                markFieldValid(latitudeField);
+            }
+
+            // Longitude
+            if (longitudeField.validity.valueMissing) {
+                markFieldInvalid(longitudeField, longitudeError, 'Longitude is required.');
+                isValid = false;
+            } else if (longitudeField.validity.rangeUnderflow || longitudeField.validity.rangeOverflow) {
+                markFieldInvalid(longitudeField, longitudeError, `Longitude must be between ${longitudeField.min} and ${longitudeField.max}.`);
+                isValid = false;
+            } else if (longitudeField.validity.badInput || isNaN(parseFloat(longitudeField.value))) {
+                 markFieldInvalid(longitudeField, longitudeError, 'Please enter a valid number for longitude.');
+                 isValid = false;
+            } else {
+                markFieldValid(longitudeField);
+            }
+
+            return isValid;
+        }
+
+        function addDismissButtonToMessage() {
+            if (messageDiv.querySelector('.message-dismiss')) return; // Avoid adding multiple buttons
+
+            const dismissButton = document.createElement('button');
+            dismissButton.innerHTML = '&times;'; // 'x' symbol
+            dismissButton.className = 'message-dismiss';
+            dismissButton.setAttribute('aria-label', 'Dismiss message');
+            dismissButton.onclick = () => {
+                messageDiv.style.display = 'none';
+                messageDiv.textContent = ''; // Clear text content as well
+                messageDiv.className = ''; // Clear classes
+            };
+            messageDiv.appendChild(dismissButton);
+        }
+
+
+        reportForm.addEventListener('submit', async function(event) {
             event.preventDefault();
-            const messageDiv = document.getElementById('message');
+
+            // Clear previous main message
             messageDiv.textContent = '';
             messageDiv.className = '';
+            messageDiv.style.display = 'none';
+            // Remove existing dismiss button before potentially adding a new one
+            const existingDismiss = messageDiv.querySelector('.message-dismiss');
+            if (existingDismiss) existingDismiss.remove();
+
+            // Clear previous validation error messages and styles
+            categoryError.textContent = '';
+            descriptionError.textContent = '';
+            latitudeError.textContent = '';
+            longitudeError.textContent = '';
+            clearValidationStyles();
+
+            if (!validateForm()) { // validateForm now also clears styles and sets new ones
+                messageDiv.textContent = 'Please correct the errors highlighted below.';
+                messageDiv.className = 'error';
+                messageDiv.style.display = 'block';
+                addDismissButtonToMessage(); // Add dismiss button to validation summary error
+
+                const firstInvalidField = reportForm.querySelector('.invalid');
+                if (firstInvalidField) {
+                    firstInvalidField.focus();
+                }
+                return;
+            }
+
+            submitButton.disabled = true;
+            const originalButtonText = submitButton.textContent;
+            submitButton.textContent = 'Submitting...';
 
             const formData = {
-                category: document.getElementById('category').value,
-                description: document.getElementById('description').value,
+                category: categoryField.value,
+                description: descriptionTextarea.value,
                 location: {
-                    lat: parseFloat(document.getElementById('latitude').value),
-                    lon: parseFloat(document.getElementById('longitude').value)
+                    lat: parseFloat(latitudeField.value),
+                    lon: parseFloat(longitudeField.value)
                 },
                 reporter_id: document.getElementById('reporter_id').value || null,
                 photo_filename: document.getElementById('photo_filename').value || null
             };
 
-            // Basic validation for optional fields to ensure they are not empty strings if provided
             if (formData.reporter_id === "") formData.reporter_id = null;
             if (formData.photo_filename === "") formData.photo_filename = null;
-
 
             try {
                 const response = await fetch('/issues', {
@@ -93,20 +350,81 @@
                 });
 
                 const result = await response.json();
+                messageDiv.style.display = 'block';
 
                 if (response.ok) {
                     messageDiv.textContent = 'Issue reported successfully! Issue ID: ' + result.issue_id;
-                    messageDiv.className = 'success';
-                    document.getElementById('reportForm').reset(); // Clear form
+                messageDiv.className = 'success';
+                reportForm.reset();
+                    clearValidationMessages(); // Clear all validation messages and styles
+                descriptionCounter.textContent = '0/500';
+                    addDismissButtonToMessage(); // Add dismiss to success message
                 } else {
-                    messageDiv.textContent = 'Error reporting issue: ' + (result.error || response.statusText);
-                    messageDiv.className = 'error';
+                    messageDiv.textContent = 'Error reporting issue: ' + (result.error || response.statusText || "Unknown server error");
+                messageDiv.className = 'error';
+                    addDismissButtonToMessage(); // Add dismiss to server error message
                 }
             } catch (error) {
+            messageDiv.style.display = 'block';
                 messageDiv.textContent = 'Network error: ' + error.message;
-                messageDiv.className = 'error';
+            messageDiv.className = 'error';
+                addDismissButtonToMessage(); // Add dismiss to network error
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = originalButtonText;
             }
         });
+
+        descriptionTextarea.addEventListener('input', () => {
+            const currentLength = descriptionTextarea.value.length;
+            descriptionCounter.textContent = `${currentLength}/500`;
+
+            // Live validation for description if it has been marked
+            if (descriptionTextarea.classList.contains('invalid') || descriptionTextarea.classList.contains('valid')) {
+                 if (descriptionTextarea.validity.valueMissing) {
+                    markFieldInvalid(descriptionTextarea, descriptionError, 'Description is required.');
+                } else if (descriptionTextarea.validity.tooLong) {
+                    markFieldInvalid(descriptionTextarea, descriptionError, `Description must be ${descriptionTextarea.maxLength} characters or less. Current: ${currentLength}`);
+                } else {
+                    markFieldValid(descriptionTextarea);
+                    descriptionError.textContent = '';
+                 }
+            }
+        });
+
+        // Simplified blur validation: re-validate the specific field on blur if it has been interacted with.
+        [categoryField, latitudeField, longitudeField].forEach(field => {
+            field.addEventListener('blur', function() {
+                // Only validate if the field itself has validation classes or form was submitted
+                if (field.classList.contains('invalid') || field.classList.contains('valid') || reportForm.classList.contains('form-submitted-once')) {
+                    // This is a simplified way; ideally, you'd have individual validation functions.
+                    // For now, let's just trigger a lightweight check or rely on the next submit for full re-validation.
+                    // Example: Re-check required for category
+                    if (field.id === 'category') {
+                        if (field.validity.valueMissing) markFieldInvalid(field, categoryError, 'Please select a category.');
+                        else if(categoryError.textContent === 'Please select a category.') { // Clear error if now valid
+                            markFieldValid(field); categoryError.textContent = '';
+                        }
+                    }
+                    // Example: Re-check range and required for lat/lon
+                    if (field.id === 'latitude' || field.id === 'longitude') {
+                        const errorEl = (field.id === 'latitude') ? latitudeError : longitudeError;
+                        if (field.validity.valueMissing) markFieldInvalid(field, errorEl, `${field.labels[0].textContent} is required.`);
+                        else if (field.validity.rangeUnderflow || field.validity.rangeOverflow) markFieldInvalid(field, errorEl, `${field.labels[0].textContent} must be between ${field.min} and ${field.max}.`);
+                        else if (field.validity.badInput || isNaN(parseFloat(field.value))) markFieldInvalid(field, errorEl, `Please enter a valid number for ${field.labels[0].textContent}.`);
+                        else if (errorEl.textContent !== '') { // Clear error if now valid
+                           markFieldValid(field); errorEl.textContent = '';
+                        }
+                    }
+                }
+            });
+        });
+
+        // Add a class to form on first submit attempt to enable more persistent "blur" validation if desired
+         reportForm.addEventListener('submit', () => {
+            reportForm.classList.add('form-submitted-once');
+        }, { once: true }); // Ensures this listener runs only once
+
     </script>
 </body>
 </html>
