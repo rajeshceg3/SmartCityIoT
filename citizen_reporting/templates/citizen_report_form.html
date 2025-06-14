@@ -4,181 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Report New Issue</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f7f6;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            color: #333;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px; /* Max width for the form */
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            box-sizing: border-box;
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 25px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #555;
-        }
-        input[type="text"],
-        input[type="number"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        input[type="text"]:focus,
-        input[type="number"]:focus,
-        textarea:focus,
-        select:focus {
-            border-color: #007bff;
-            outline: none;
-        }
-        textarea {
-            resize: vertical; /* Allow vertical resize */
-        }
-        button[type="submit"] {
-            width: 100%;
-            padding: 12px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: background-color 0.3s;
-        }
-        button[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-        #message {
-            margin-top: 25px;
-            padding: 15px;
-            border-radius: 6px;
-            font-size: 16px;
-            text-align: center;
-            display: none; /* Hidden by default */
-            position: relative; /* For dismiss button */
-        }
-        .message-dismiss {
-            position: absolute;
-            top: 8px;
-            right: 10px;
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: inherit; /* Inherit color from parent (.success or .error) */
-            cursor: pointer;
-        }
-        .success {
-            background-color: #d1e7dd;
-            color: #0f5132;
-            border: 1px solid #badbcc;
-            display: block;
-        }
-        .error {
-            background-color: #f8d7da;
-            color: #842029;
-            border: 1px solid #f5c2c7;
-            display: block;
-        }
-        .validation-error {
-            color: #dc3545;
-            font-size: 0.875em;
-            margin-top: 5px;
-            display: block;
-        }
-
-        /* Styling for fields explicitly marked as invalid by JavaScript */
-        input.invalid,
-        select.invalid,
-        textarea.invalid {
-             border-color: #dc3545 !important; /* Use important to override default focus styles if necessary */
-        }
-         /* Styling for fields explicitly marked as valid by JavaScript (optional) */
-        input.valid,
-        select.valid,
-        textarea.valid {
-             border-color: #28a745; /* Green border for valid fields */
-        }
-
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container">
-        <h1>Report a New Issue</h1>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto mt-10 mb-10 max-w-xl bg-white p-8 rounded-lg shadow-xl">
+        <h1 class="text-3xl font-bold text-center mb-8">Report a New Issue</h1>
         <form id="reportForm" novalidate>
-            <div class="form-group">
-                <label for="category">Category:</label>
-                <select id="category" name="category" required>
-                    <option value="">--Please choose an option--</option>
-                    <option value="Pothole">Pothole</option>
+            <div class="mb-6">
+                <label for="category" class="block font-semibold mb-2 text-gray-700">Category:</label>
+                <div class="relative">
+                    <select id="category" name="category" required aria-describedby="category-error" class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ease-in-out appearance-none pr-10">
+                        <option value="">--Please choose an option--</option>
+                        <option value="Pothole">Pothole</option>
                     <option value="Streetlight Out">Streetlight Out</option>
                     <option value="Graffiti">Graffiti</option>
                     <option value="Trash Overflow">Trash Overflow</option>
                     <option value="Damaged Signage">Damaged Signage</option>
                     <option value="Other">Other</option>
-                </select>
-                <div class="validation-error" id="category-error"></div>
+                    </select>
+                    <span id="category-icon-container" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"></span>
+                </div>
+                <div class="text-red-500 text-sm mt-1" id="category-error"></div>
             </div>
-            <div class="form-group">
-                <label for="description">Description:</label>
-                <textarea id="description" name="description" rows="4" required maxlength="500"></textarea>
-                <div id="description-counter" style="font-size: 0.8em; text-align: right; color: #666;">0/500</div>
-                <div class="validation-error" id="description-error"></div>
+            <div class="mb-6">
+                <label for="description" class="block font-semibold mb-2 text-gray-700">Description:</label>
+                <textarea id="description" name="description" rows="4" required maxlength="500" aria-describedby="description-error" class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ease-in-out"></textarea>
+                <div id="description-counter" class="text-sm text-right text-gray-500 mt-1">0/500</div>
+                <div class="text-red-500 text-sm mt-1" id="description-error"></div>
             </div>
-            <div class="form-group">
-                <label for="latitude">Latitude:</label>
-                <input type="number" id="latitude" name="latitude" step="any" required min="-90" max="90">
-                <div class="validation-error" id="latitude-error"></div>
+            <div class="mb-6">
+                <label for="latitude" class="block font-semibold mb-2 text-gray-700">Latitude:</label>
+                <div class="relative">
+                    <input type="number" id="latitude" name="latitude" step="any" required min="-90" max="90" aria-describedby="latitude-error" class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ease-in-out pr-10">
+                    <span id="latitude-icon-container" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"></span>
+                </div>
+                <div class="text-red-500 text-sm mt-1" id="latitude-error"></div>
             </div>
-            <div class="form-group">
-                <label for="longitude">Longitude:</label>
-                <input type="number" id="longitude" name="longitude" step="any" required min="-180" max="180">
-                <div class="validation-error" id="longitude-error"></div>
+            <div class="mb-6">
+                <label for="longitude" class="block font-semibold mb-2 text-gray-700">Longitude:</label>
+                <div class="relative">
+                    <input type="number" id="longitude" name="longitude" step="any" required min="-180" max="180" aria-describedby="longitude-error" class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ease-in-out pr-10">
+                    <span id="longitude-icon-container" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"></span>
+                </div>
+                <div class="text-red-500 text-sm mt-1" id="longitude-error"></div>
             </div>
-            <div class="form-group">
-                <label for="reporter_id">Reporter ID (Optional):</label>
-                <input type="text" id="reporter_id" name="reporter_id">
+            <div class="mb-6">
+                <label for="reporter_id" class="block font-semibold mb-2 text-gray-700">Reporter ID (Optional):</label>
+                <input type="text" id="reporter_id" name="reporter_id" class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ease-in-out">
             </div>
-            <div class="form-group">
-                <label for="photo_filename">Photo Filename (Optional):</label>
-                <input type="text" id="photo_filename" name="photo_filename">
+            <div class="mb-6">
+                <label for="photo_filename" class="block font-semibold mb-2 text-gray-700">Photo Filename (Optional):</label>
+                <input type="text" id="photo_filename" name="photo_filename" class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ease-in-out">
             </div>
-            <button type="submit">Submit Report</button>
+            <button type="submit" class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 font-semibold transition-all duration-200 ease-in-out">Submit Report</button>
         </form>
-        <div id="message"></div>
+        <div id="message" class="mt-6 p-4 rounded-md text-center relative transition-all duration-300 ease-out" style="display: none;"></div>
     </div>
 
     <script>
         const reportForm = document.getElementById('reportForm');
         const messageDiv = document.getElementById('message');
         const submitButton = reportForm.querySelector('button[type="submit"]');
+        messageDiv.messageTimeout = null; // For clearing previous timeout if message is updated rapidly
+
 
         const categoryField = document.getElementById('category');
         const descriptionTextarea = document.getElementById('description');
@@ -191,131 +79,214 @@
         const longitudeError = document.getElementById('longitude-error');
         const descriptionCounter = document.getElementById('description-counter');
 
+        const categoryIconContainer = document.getElementById('category-icon-container');
+        const latitudeIconContainer = document.getElementById('latitude-icon-container');
+        const longitudeIconContainer = document.getElementById('longitude-icon-container');
+
+        // SVG Icons
+        const successIconSVG = `<svg aria-hidden="true" class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>`;
+        const errorIconSVG = `<svg aria-hidden="true" class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>`;
+
+        // Tailwind classes for validation states
+        const validFieldClass = 'border-green-500';
+        const invalidFieldClass = 'border-red-500';
+        const defaultFieldClass = 'border-gray-300';
+
         function clearValidationStyles() {
-            // Remove .invalid and .valid classes from all fields
-            [categoryField, descriptionTextarea, latitudeField, longitudeField].forEach(field => {
-                field.classList.remove('invalid');
-                field.classList.remove('valid');
+            const fieldsWithIcons = [
+                { field: categoryField, iconContainer: categoryIconContainer },
+                { field: latitudeField, iconContainer: latitudeIconContainer },
+                { field: longitudeField, iconContainer: longitudeIconContainer }
+            ];
+
+            fieldsWithIcons.forEach(item => {
+                item.field.classList.remove(invalidFieldClass, validFieldClass);
+                if (!item.field.classList.contains(invalidFieldClass) && !item.field.classList.contains(validFieldClass)) {
+                    item.field.classList.add(defaultFieldClass);
+                }
+                item.field.removeAttribute('aria-invalid');
+                if (item.iconContainer) {
+                    item.iconContainer.innerHTML = '';
+                }
             });
+            // For description textarea
+            descriptionTextarea.classList.remove(invalidFieldClass, validFieldClass);
+            if (!descriptionTextarea.classList.contains(invalidFieldClass) && !descriptionTextarea.classList.contains(validFieldClass)) {
+                descriptionTextarea.classList.add(defaultFieldClass);
+            }
+            descriptionTextarea.removeAttribute('aria-invalid');
+        }
+
+        function clearFieldValidation(field, errorElement, iconContainer) { // This function seems less used now, but will update for consistency
+            field.classList.remove(invalidFieldClass, validFieldClass);
+            field.classList.add(defaultFieldClass);
+            field.removeAttribute('aria-invalid');
+            if (errorElement) {
+                errorElement.textContent = '';
+            }
+            if (iconContainer) {
+                iconContainer.innerHTML = '';
+            }
         }
 
         function clearValidationMessages() {
             categoryError.textContent = '';
-            descriptionError.textContent = '';
+            descriptionError.textContent = ''; // Description does not use icon container in this setup
             latitudeError.textContent = '';
             longitudeError.textContent = '';
-            clearValidationStyles(); // Also clear styles
+
+            // Clear icons for relevant fields
+            if (categoryIconContainer) categoryIconContainer.innerHTML = '';
+            if (latitudeIconContainer) latitudeIconContainer.innerHTML = '';
+            if (longitudeIconContainer) longitudeIconContainer.innerHTML = '';
+
+            clearValidationStyles();
         }
 
-        function markFieldValid(field) {
-            field.classList.remove('invalid');
-            field.classList.add('valid');
+        function markFieldValid(field, iconContainer) {
+            field.classList.remove(invalidFieldClass, defaultFieldClass);
+            field.classList.add(validFieldClass);
+            field.setAttribute('aria-invalid', 'false');
+            if (iconContainer) {
+                iconContainer.innerHTML = successIconSVG;
+            }
         }
 
-        function markFieldInvalid(field, errorElement, message) {
-            field.classList.add('invalid');
-            field.classList.remove('valid');
-            if (errorElement) { // Not all fields might have a dedicated error element if we simplify
+        function markFieldInvalid(field, errorElement, message, iconContainer) {
+            field.classList.remove(validFieldClass, defaultFieldClass);
+            field.classList.add(invalidFieldClass);
+            field.setAttribute('aria-invalid', 'true');
+            if (errorElement) {
                  errorElement.textContent = message;
+            }
+            if (iconContainer) {
+                iconContainer.innerHTML = errorIconSVG;
             }
         }
 
         function validateForm() {
-            clearValidationStyles(); // Clear previous validation styles before re-validating
             let isValid = true;
-            // reportForm.classList.add('submitted'); // Not strictly needed anymore with JS based styling
 
             // Category
+            categoryError.textContent = '';
+            categoryIconContainer.innerHTML = '';
             if (categoryField.validity.valueMissing) {
-                markFieldInvalid(categoryField, categoryError, 'Please select a category.');
+                markFieldInvalid(categoryField, categoryError, 'Please select a category.', categoryIconContainer);
                 isValid = false;
             } else {
-                markFieldValid(categoryField);
+                markFieldValid(categoryField, categoryIconContainer);
             }
 
-            // Description
+            // Description (no icon for textarea in this iteration)
+            descriptionError.textContent = '';
             if (descriptionTextarea.validity.valueMissing) {
-                markFieldInvalid(descriptionTextarea, descriptionError, 'Description is required.');
+                markFieldInvalid(descriptionTextarea, descriptionError, 'Description is required.'); // No icon container passed
                 isValid = false;
             } else if (descriptionTextarea.validity.tooLong) {
-                markFieldInvalid(descriptionTextarea, descriptionError, `Description must be ${descriptionTextarea.maxLength} characters or less. Current: ${descriptionTextarea.value.length}`);
+                markFieldInvalid(descriptionTextarea, descriptionError, `Description must be ${descriptionTextarea.maxLength} characters or less. Current: ${descriptionTextarea.value.length}`); // No icon container
                 isValid = false;
             } else {
-                markFieldValid(descriptionTextarea);
+                markFieldValid(descriptionTextarea); // No icon container
             }
 
             // Latitude
+            latitudeError.textContent = '';
+            latitudeIconContainer.innerHTML = '';
             if (latitudeField.validity.valueMissing) {
-                markFieldInvalid(latitudeField, latitudeError, 'Latitude is required.');
+                markFieldInvalid(latitudeField, latitudeError, 'Latitude is required.', latitudeIconContainer);
                 isValid = false;
             } else if (latitudeField.validity.rangeUnderflow || latitudeField.validity.rangeOverflow) {
-                markFieldInvalid(latitudeField, latitudeError, `Latitude must be between ${latitudeField.min} and ${latitudeField.max}.`);
+                markFieldInvalid(latitudeField, latitudeError, `Latitude must be between ${latitudeField.min} and ${latitudeField.max}.`, latitudeIconContainer);
                 isValid = false;
             } else if (latitudeField.validity.badInput || isNaN(parseFloat(latitudeField.value))) {
-                 markFieldInvalid(latitudeField, latitudeError, 'Please enter a valid number for latitude.');
+                 markFieldInvalid(latitudeField, latitudeError, 'Please enter a valid number for latitude.', latitudeIconContainer);
                  isValid = false;
             } else {
-                markFieldValid(latitudeField);
+                markFieldValid(latitudeField, latitudeIconContainer);
             }
 
             // Longitude
+            longitudeError.textContent = '';
+            longitudeIconContainer.innerHTML = '';
             if (longitudeField.validity.valueMissing) {
-                markFieldInvalid(longitudeField, longitudeError, 'Longitude is required.');
+                markFieldInvalid(longitudeField, longitudeError, 'Longitude is required.', longitudeIconContainer);
                 isValid = false;
             } else if (longitudeField.validity.rangeUnderflow || longitudeField.validity.rangeOverflow) {
-                markFieldInvalid(longitudeField, longitudeError, `Longitude must be between ${longitudeField.min} and ${longitudeField.max}.`);
+                markFieldInvalid(longitudeField, longitudeError, `Longitude must be between ${longitudeField.min} and ${longitudeField.max}.`, longitudeIconContainer);
                 isValid = false;
             } else if (longitudeField.validity.badInput || isNaN(parseFloat(longitudeField.value))) {
-                 markFieldInvalid(longitudeField, longitudeError, 'Please enter a valid number for longitude.');
+                 markFieldInvalid(longitudeField, longitudeError, 'Please enter a valid number for longitude.', longitudeIconContainer);
                  isValid = false;
             } else {
-                markFieldValid(longitudeField);
+                markFieldValid(longitudeField, longitudeIconContainer);
             }
 
             return isValid;
         }
 
-        function addDismissButtonToMessage() {
-            if (messageDiv.querySelector('.message-dismiss')) return; // Avoid adding multiple buttons
+        function addDismissButtonToMessage(messageElement) {
+            // Remove existing dismiss button first to prevent duplicates if called multiple times
+            const existingButton = messageElement.querySelector('.message-dismiss-btn');
+            if (existingButton) {
+                existingButton.remove();
+            }
 
             const dismissButton = document.createElement('button');
-            dismissButton.innerHTML = '&times;'; // 'x' symbol
-            dismissButton.className = 'message-dismiss';
+            dismissButton.innerHTML = '&times;';
+            dismissButton.className = 'message-dismiss-btn absolute top-2 right-3 text-xl font-bold leading-none hover:text-gray-700 focus:outline-none';
             dismissButton.setAttribute('aria-label', 'Dismiss message');
             dismissButton.onclick = () => {
-                messageDiv.style.display = 'none';
-                messageDiv.textContent = ''; // Clear text content as well
-                messageDiv.className = ''; // Clear classes
+                // Start fade out animation for message dismissal
+                messageElement.classList.add('opacity-0', '-translate-y-2');
+                messageElement.addEventListener('transitionend', () => {
+                    messageElement.style.display = 'none';
+                    messageElement.className = 'mt-6 p-4 rounded-md text-center relative transition-all duration-300 ease-out'; // Reset to base styles + transition for next time
+                    messageElement.textContent = '';
+                }, { once: true });
             };
-            messageDiv.appendChild(dismissButton);
+            messageElement.appendChild(dismissButton);
         }
 
+        function showMessage(isSuccess, textContent) {
+            // Clear previous timeout if one was set
+            if (messageDiv.messageTimeout) {
+                clearTimeout(messageDiv.messageTimeout);
+                messageDiv.messageTimeout = null;
+            }
+            // Ensure listener from previous message is removed if it didn't fire (e.g. user double clicked submit)
+            // This is safer by cloning and replacing the node to remove all listeners, or manage listeners carefully.
+            // For simplicity here, we rely on {once: true} for transitionend, but rapid calls could still be an issue.
+
+            messageDiv.className = 'mt-6 p-4 rounded-md text-center relative transition-all duration-300 ease-out'; // Base classes
+            messageDiv.classList.add('opacity-0', 'transform', '-translate-y-2'); // Initial animation state
+
+            if (isSuccess) {
+                messageDiv.classList.add('bg-green-100', 'border', 'border-green-400', 'text-green-700');
+            } else {
+                messageDiv.classList.add('bg-red-100', 'border', 'border-red-400', 'text-red-700');
+            }
+            messageDiv.textContent = textContent;
+            addDismissButtonToMessage(messageDiv);
+            messageDiv.style.display = 'block';
+
+            requestAnimationFrame(() => {
+                messageDiv.classList.remove('opacity-0', '-translate-y-2');
+                messageDiv.classList.add('opacity-100', 'translate-y-0');
+            });
+        }
 
         reportForm.addEventListener('submit', async function(event) {
             event.preventDefault();
 
-            // Clear previous main message
-            messageDiv.textContent = '';
-            messageDiv.className = '';
+            // Hide previous message immediately (or animate out if preferred, but immediate is simpler here)
             messageDiv.style.display = 'none';
-            // Remove existing dismiss button before potentially adding a new one
-            const existingDismiss = messageDiv.querySelector('.message-dismiss');
-            if (existingDismiss) existingDismiss.remove();
+            messageDiv.className = 'mt-6 p-4 rounded-md text-center relative transition-all duration-300 ease-out'; // Reset classes
 
-            // Clear previous validation error messages and styles
-            categoryError.textContent = '';
-            descriptionError.textContent = '';
-            latitudeError.textContent = '';
-            longitudeError.textContent = '';
-            clearValidationStyles();
+            clearValidationMessages();
 
-            if (!validateForm()) { // validateForm now also clears styles and sets new ones
-                messageDiv.textContent = 'Please correct the errors highlighted below.';
-                messageDiv.className = 'error';
-                messageDiv.style.display = 'block';
-                addDismissButtonToMessage(); // Add dismiss button to validation summary error
-
-                const firstInvalidField = reportForm.querySelector('.invalid');
+            if (!validateForm()) {
+                showMessage(false, 'Please correct the errors highlighted below.');
+                const firstInvalidField = reportForm.querySelector('.' + invalidFieldClass.replace(/^border-/, ''));
                 if (firstInvalidField) {
                     firstInvalidField.focus();
                 }
@@ -350,80 +321,69 @@
                 });
 
                 const result = await response.json();
-                messageDiv.style.display = 'block';
 
                 if (response.ok) {
-                    messageDiv.textContent = 'Issue reported successfully! Issue ID: ' + result.issue_id;
-                messageDiv.className = 'success';
-                reportForm.reset();
-                    clearValidationMessages(); // Clear all validation messages and styles
-                descriptionCounter.textContent = '0/500';
-                    addDismissButtonToMessage(); // Add dismiss to success message
+                    showMessage(true, 'Issue reported successfully! Issue ID: ' + result.issue_id);
+                    reportForm.reset();
+                    clearValidationMessages();
+                    descriptionCounter.textContent = '0/500';
                 } else {
-                    messageDiv.textContent = 'Error reporting issue: ' + (result.error || response.statusText || "Unknown server error");
-                messageDiv.className = 'error';
-                    addDismissButtonToMessage(); // Add dismiss to server error message
+                    showMessage(false, 'Error reporting issue: ' + (result.error || response.statusText || "Unknown server error"));
                 }
             } catch (error) {
-            messageDiv.style.display = 'block';
-                messageDiv.textContent = 'Network error: ' + error.message;
-            messageDiv.className = 'error';
-                addDismissButtonToMessage(); // Add dismiss to network error
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = originalButtonText;
+                showMessage(false, 'Network error: ' + error.message);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
             }
         });
 
         descriptionTextarea.addEventListener('input', () => {
             const currentLength = descriptionTextarea.value.length;
             descriptionCounter.textContent = `${currentLength}/500`;
+            descriptionError.textContent = ''; // Clear error on input
+            descriptionTextarea.classList.remove(invalidFieldClass); // Remove red border
+            descriptionTextarea.classList.add(defaultFieldClass); // Add default border
 
-            // Live validation for description if it has been marked
-            if (descriptionTextarea.classList.contains('invalid') || descriptionTextarea.classList.contains('valid')) {
-                 if (descriptionTextarea.validity.valueMissing) {
-                    markFieldInvalid(descriptionTextarea, descriptionError, 'Description is required.');
-                } else if (descriptionTextarea.validity.tooLong) {
-                    markFieldInvalid(descriptionTextarea, descriptionError, `Description must be ${descriptionTextarea.maxLength} characters or less. Current: ${currentLength}`);
-                } else {
-                    markFieldValid(descriptionTextarea);
-                    descriptionError.textContent = '';
-                 }
+            if (descriptionTextarea.validity.tooLong) { // Check only for too long
+                markFieldInvalid(descriptionTextarea, descriptionError, `Description must be ${descriptionTextarea.maxLength} characters or less. Current: ${currentLength}`);
+            } else if (descriptionTextarea.value.length > 0 && !descriptionTextarea.validity.tooLong) {
+                 markFieldValid(descriptionTextarea); // Mark valid if has content and not too long
             }
+            // If empty, it will be caught by the main validateForm on submit.
         });
 
-        // Simplified blur validation: re-validate the specific field on blur if it has been interacted with.
-        [categoryField, latitudeField, longitudeField].forEach(field => {
-            field.addEventListener('blur', function() {
-                // Only validate if the field itself has validation classes or form was submitted
-                if (field.classList.contains('invalid') || field.classList.contains('valid') || reportForm.classList.contains('form-submitted-once')) {
-                    // This is a simplified way; ideally, you'd have individual validation functions.
-                    // For now, let's just trigger a lightweight check or rely on the next submit for full re-validation.
-                    // Example: Re-check required for category
-                    if (field.id === 'category') {
-                        if (field.validity.valueMissing) markFieldInvalid(field, categoryError, 'Please select a category.');
-                        else if(categoryError.textContent === 'Please select a category.') { // Clear error if now valid
-                            markFieldValid(field); categoryError.textContent = '';
-                        }
-                    }
-                    // Example: Re-check range and required for lat/lon
-                    if (field.id === 'latitude' || field.id === 'longitude') {
-                        const errorEl = (field.id === 'latitude') ? latitudeError : longitudeError;
-                        if (field.validity.valueMissing) markFieldInvalid(field, errorEl, `${field.labels[0].textContent} is required.`);
-                        else if (field.validity.rangeUnderflow || field.validity.rangeOverflow) markFieldInvalid(field, errorEl, `${field.labels[0].textContent} must be between ${field.min} and ${field.max}.`);
-                        else if (field.validity.badInput || isNaN(parseFloat(field.value))) markFieldInvalid(field, errorEl, `Please enter a valid number for ${field.labels[0].textContent}.`);
-                        else if (errorEl.textContent !== '') { // Clear error if now valid
-                           markFieldValid(field); errorEl.textContent = '';
-                        }
+        // Extended blur validation to include icon updates
+        [
+            { field: categoryField, errorEl: categoryError, iconC: categoryIconContainer, name: 'Category' },
+            { field: latitudeField, errorEl: latitudeError, iconC: latitudeIconContainer, name: 'Latitude' },
+            { field: longitudeField, errorEl: longitudeError, iconC: longitudeIconContainer, name: 'Longitude' }
+        ].forEach(item => {
+            item.field.addEventListener('blur', function() {
+                item.errorEl.textContent = ''; // Clear previous error message
+                item.iconC.innerHTML = ''; // Clear previous icon
+                item.field.classList.remove(invalidFieldClass, validFieldClass);
+                item.field.classList.add(defaultFieldClass);
+
+                if (reportForm.classList.contains('form-submitted-once') || item.field.classList.contains(invalidFieldClass)) {
+                    if (item.field.id === 'category') {
+                        if (item.field.validity.valueMissing) markFieldInvalid(item.field, item.errorEl, 'Please select a category.', item.iconC);
+                        else markFieldValid(item.field, item.iconC);
+                    } else { // For latitude and longitude
+                        if (item.field.validity.valueMissing) markFieldInvalid(item.field, item.errorEl, `${item.name} is required.`, item.iconC);
+                        else if (item.field.validity.rangeUnderflow || item.field.validity.rangeOverflow) markFieldInvalid(item.field, item.errorEl, `${item.name} must be between ${item.field.min} and ${item.field.max}.`, item.iconC);
+                        else if (item.field.validity.badInput || isNaN(parseFloat(item.field.value))) markFieldInvalid(item.field, item.errorEl, `Please enter a valid number for ${item.name.toLowerCase()}.`, item.iconC);
+                        else markFieldValid(item.field, item.iconC);
                     }
                 }
             });
         });
 
-        // Add a class to form on first submit attempt to enable more persistent "blur" validation if desired
-         reportForm.addEventListener('submit', () => {
-            reportForm.classList.add('form-submitted-once');
-        }, { once: true }); // Ensures this listener runs only once
+        reportForm.addEventListener('submit', () => {
+            if (!reportForm.classList.contains('form-submitted-once')) {
+                 reportForm.classList.add('form-submitted-once');
+            }
+        }, { capture: true }); // Use capture to ensure it runs before the main submit handler if needed, though order here might not be critical.
 
     </script>
 </body>
