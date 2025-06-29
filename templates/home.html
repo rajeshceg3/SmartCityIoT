@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Home - Smart City Dashboard
+{% endblock %}
+
+{% block content %}
+<div class="bg-white p-8 rounded-lg shadow-xl text-center">
+    <h1 class="text-4xl font-bold text-gray-800 mb-6">Welcome to the Smart City OS Dashboard!</h1>
+    <p class="text-lg text-gray-600 mb-8">
+        This central dashboard provides access to various city management modules.
+        Use the navigation bar above to explore the available services.
+    </p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="/citizen/dashboard" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-6 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
+            <h2 class="text-2xl mb-2">Citizen Reporting</h2>
+            <p>View and manage citizen-reported issues.</p>
+        </a>
+        <a href="/waste/dashboard" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-6 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
+            <h2 class="text-2xl mb-2">Waste Management</h2>
+            <p>Monitor bins and optimize collection routes.</p>
+        </a>
+        <a href="{{ url_for('traffic_dashboard_link') }}" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-6 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
+            <h2 class="text-2xl mb-2">Traffic Management</h2>
+            <p>Oversee traffic signals and emergency vehicle preemption.</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

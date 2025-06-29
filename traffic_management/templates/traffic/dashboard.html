@@ -1,0 +1,378 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Traffic Management - Smart City Dashboard
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Traffic Management Control Center</h1>
+
+    <!-- Signals Overview Section -->
+    <div class="bg-white p-6 rounded-lg shadow-xl mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold text-gray-700">Traffic Signals Status</h2>
+            <button id="refreshSignalsBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                Refresh Signals
+            </button>
+        </div>
+        <div id="signalsTableContainer" class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                    <tr>
+                        <th class="py-3 px-6 text-left">Signal ID</th>
+                        <th class="py-3 px-6 text-left">Location</th>
+                        <th class="py-3 px-6 text-left">Current State</th>
+                        <th class="py-3 px-6 text-left">Lanes Controlled</th>
+                        <th class="py-3 px-6 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="signalsTableBody" class="text-gray-600 text-sm font-light">
+                    <!-- Signal rows will be populated here -->
+                </tbody>
+            </table>
+            <div id="signalsLoading" class="text-center py-4 text-gray-500" style="display:none;">Loading signals...</div>
+            <div id="signalsError" class="text-center py-4 text-red-500" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- Emergency Management Section -->
+    <div class="bg-white p-6 rounded-lg shadow-xl mb-8">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Emergency Preemption Control</h2>
+        <div class="grid md:grid-cols-2 gap-4 items-end">
+            <div>
+                <label for="emergencySignalId" class="block text-sm font-medium text-gray-700">Target Signal ID:</label>
+                <select id="emergencySignalId" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <!-- Options will be populated by JS -->
+                </select>
+            </div>
+            <div class="flex space-x-2">
+                <button id="triggerEmergencyBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors w-full md:w-auto">
+                    Trigger Preemption
+                </button>
+                <button id="endEmergencyBtn" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded transition-colors w-full md:w-auto">
+                    End Preemption
+                </button>
+            </div>
+        </div>
+        <div id="emergencyStatus" class="mt-4 text-sm"></div>
+    </div>
+
+    <!-- Simulation Control Section -->
+    <div class="bg-white p-6 rounded-lg shadow-xl">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Traffic Simulation</h2>
+        <div class="flex space-x-2 mb-4">
+            <button id="runSimulationBtn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                Run Full Simulation Scenario
+            </button>
+            <button id="fetchLogBtn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                Fetch Latest Simulation Log
+            </button>
+        </div>
+        <div id="simulationStatus" class="mb-4 text-sm"></div>
+        <div class="bg-gray-50 p-4 rounded shadow">
+            <h3 class="text-lg font-semibold text-gray-600 mb-2">Simulation Log:</h3>
+            <pre id="simulationLogOutput" class="text-xs bg-black text-green-400 p-4 rounded-md overflow-x-auto h-64 whitespace-pre-wrap"></pre>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal for Signal State Update -->
+<div id="signalStateModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div class="sm:flex sm:items-start">
+          <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Update Signal State</h3>
+            <input type="hidden" id="modalSignalId">
+            <div class="mt-2" id="modalStateInputs">
+              <!-- State inputs will be populated here -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <button type="button" id="saveStateBtn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+          Save Changes
+        </button>
+        <button type="button" id="cancelStateBtn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    const API_BASE_URL = '/traffic'; // Assuming blueprint is registered at /traffic
+
+    const signalsTableBody = document.getElementById('signalsTableBody');
+    const signalsLoading = document.getElementById('signalsLoading');
+    const signalsError = document.getElementById('signalsError');
+    const emergencySignalIdSelect = document.getElementById('emergencySignalId');
+    const emergencyStatus = document.getElementById('emergencyStatus');
+    const simulationStatus = document.getElementById('simulationStatus');
+    const simulationLogOutput = document.getElementById('simulationLogOutput');
+
+    // Modal elements
+    const signalStateModal = document.getElementById('signalStateModal');
+    const modalSignalIdInput = document.getElementById('modalSignalId');
+    const modalStateInputsContainer = document.getElementById('modalStateInputs');
+
+    // --- Utility Functions ---
+    function showLoading(element, message = "Loading...") {
+        element.textContent = message;
+        element.style.display = 'block';
+    }
+
+    function hideLoading(element) {
+        element.style.display = 'none';
+    }
+
+    function showError(element, message) {
+        element.textContent = message;
+        element.style.display = 'block';
+    }
+
+    function hideError(element) {
+        element.style.display = 'none';
+    }
+
+    function updateStatus(element, message, isError = false) {
+        element.textContent = message;
+        element.className = isError ? 'mt-4 text-sm text-red-500' : 'mt-4 text-sm text-green-700';
+    }
+
+    // --- API Fetch Functions ---
+    async function fetchSignals() {
+        showLoading(signalsLoading);
+        hideError(signalsError);
+        signalsTableBody.innerHTML = ''; // Clear previous
+        try {
+            const response = await fetch(`${API_BASE_URL}/signals`);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: "Failed to fetch signals. Status: " + response.status }));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+            const signals = await response.json();
+            populateSignalsTable(signals);
+            populateSignalSelect(signals);
+        } catch (error) {
+            console.error('Error fetching signals:', error);
+            showError(signalsError, `Error fetching signals: ${error.message}`);
+        } finally {
+            hideLoading(signalsLoading);
+        }
+    }
+
+    async function setSignalState(signalId, state) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/signals/${signalId}/set_state`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(state)
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || `HTTP error! status: ${response.status}`);
+            updateStatus(emergencyStatus, `Signal ${signalId} state updated successfully. New state: ${JSON.stringify(result.new_state)}`);
+            fetchSignals(); // Refresh table
+            closeModal();
+        } catch (error) {
+            console.error('Error setting signal state:', error);
+            updateStatus(emergencyStatus, `Error setting signal state: ${error.message}`, true);
+        }
+    }
+
+    async function triggerEmergency(signalId) {
+        updateStatus(emergencyStatus, 'Triggering emergency preemption...');
+        try {
+            const response = await fetch(`${API_BASE_URL}/emergency/trigger`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ signal_id: signalId, vehicle_id: "WebAppEV01", location: [1,1] }) // Example data
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || `HTTP error! status: ${response.status}`);
+            updateStatus(emergencyStatus, result.message + ` Mode Active: ${result.emergency_mode_active}`);
+            fetchSignals(); // Refresh signals to show updated states
+        } catch (error) {
+            console.error('Error triggering emergency:', error);
+            updateStatus(emergencyStatus, `Error: ${error.message}`, true);
+        }
+    }
+
+    async function endEmergency(signalId) {
+        updateStatus(emergencyStatus, 'Ending emergency preemption...');
+        try {
+            const response = await fetch(`${API_BASE_URL}/emergency/end`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ signal_id: signalId })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || `HTTP error! status: ${response.status}`);
+            updateStatus(emergencyStatus, result.message + ` Mode Active: ${result.emergency_mode_active}`);
+            fetchSignals(); // Refresh signals
+        } catch (error) {
+            console.error('Error ending emergency:', error);
+            updateStatus(emergencyStatus, `Error: ${error.message}`, true);
+        }
+    }
+
+    async function runSimulation() {
+        updateStatus(simulationStatus, 'Running simulation scenario...');
+        simulationLogOutput.textContent = 'Starting simulation...';
+        try {
+            const response = await fetch(`${API_BASE_URL}/simulation/run`, { method: 'POST' });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || `HTTP error! status: ${response.status}`);
+            updateStatus(simulationStatus, `${result.message} Sim ID: ${result.simulation_id}`);
+            simulationLogOutput.textContent = `Simulation ${result.simulation_id} run. Log preview (last 5 entries):\n` + (result.log_preview || []).join('\n');
+            fetchSignals(); // Simulation might change global signal states if designed to interact
+        } catch (error) {
+            console.error('Error running simulation:', error);
+            updateStatus(simulationStatus, `Error: ${error.message}`, true);
+            simulationLogOutput.textContent += `\nError: ${error.message}`;
+        }
+    }
+
+    async function fetchSimulationLog() {
+        updateStatus(simulationStatus, 'Fetching simulation log...');
+        simulationLogOutput.textContent = 'Fetching log...';
+        try {
+            const response = await fetch(`${API_BASE_URL}/simulation/log`);
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || `HTTP error! status: ${response.status}`);
+            updateStatus(simulationStatus, `Log for simulation ${result.simulation_id} fetched.`);
+            simulationLogOutput.textContent = (result.log || ["Log is empty or not available."]).join('\n');
+        } catch (error) {
+            console.error('Error fetching simulation log:', error);
+            updateStatus(simulationStatus, `Error: ${error.message}`, true);
+            simulationLogOutput.textContent += `\nError: ${error.message}`;
+        }
+    }
+
+    // --- DOM Manipulation ---
+    function populateSignalsTable(signals) {
+        signalsTableBody.innerHTML = ''; // Clear previous
+        if (!signals || signals.length === 0) {
+            signalsTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No signals found.</td></tr>';
+            return;
+        }
+        signals.forEach(signal => {
+            const row = signalsTableBody.insertRow();
+            row.className = 'border-b border-gray-200 hover:bg-gray-100';
+            row.insertCell().textContent = signal.signal_id;
+            row.insertCell().textContent = signal.location ? `Lat: ${signal.location[0].toFixed(3)}, Lon: ${signal.location[1].toFixed(3)}` : 'N/A';
+            row.insertCell().textContent = signal.current_state ? JSON.stringify(signal.current_state) : 'N/A';
+            row.insertCell().textContent = signal.lanes_controlled ? signal.lanes_controlled.join(', ') : 'N/A';
+
+            const actionsCell = row.insertCell();
+            actionsCell.className = 'py-3 px-6 text-center';
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Edit State';
+            editButton.className = 'bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-1 px-2 rounded text-xs transition-colors';
+            editButton.onclick = () => openModalForSignal(signal);
+            actionsCell.appendChild(editButton);
+        });
+    }
+
+    function populateSignalSelect(signals) {
+        emergencySignalIdSelect.innerHTML = '<option value="">-- Select Signal --</option>';
+        if (signals && signals.length > 0) {
+            signals.forEach(signal => {
+                const option = document.createElement('option');
+                option.value = signal.signal_id;
+                option.textContent = signal.signal_id + (signal.location ? ` (Loc: ${signal.location[0].toFixed(2)},${signal.location[1].toFixed(2)})` : '');
+                emergencySignalIdSelect.appendChild(option);
+            });
+        }
+    }
+
+    // --- Modal Logic ---
+    function openModalForSignal(signal) {
+        modalSignalIdInput.value = signal.signal_id;
+        modalStateInputsContainer.innerHTML = ''; // Clear previous inputs
+
+        if (signal.current_state && typeof signal.current_state === 'object') {
+            Object.entries(signal.current_state).forEach(([aspect, color]) => {
+                const aspectDiv = document.createElement('div');
+                aspectDiv.className = 'mb-2';
+                const label = document.createElement('label');
+                label.for = `modal-aspect-${aspect}`;
+                label.className = 'block text-sm font-medium text-gray-700 capitalize';
+                label.textContent = `${aspect}:`;
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `modal-aspect-${aspect}`;
+                input.name = aspect;
+                input.value = color;
+                input.className = 'mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
+
+                aspectDiv.appendChild(label);
+                aspectDiv.appendChild(input);
+                modalStateInputsContainer.appendChild(aspectDiv);
+            });
+        } else {
+            modalStateInputsContainer.innerHTML = '<p class="text-sm text-gray-500">Signal state is not available or not in expected format.</p>';
+        }
+        signalStateModal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        signalStateModal.classList.add('hidden');
+    }
+
+    function handleSaveState() {
+        const signalId = modalSignalIdInput.value;
+        const newState = {};
+        const inputs = modalStateInputsContainer.querySelectorAll('input[type="text"]');
+        inputs.forEach(input => {
+            newState[input.name] = input.value;
+        });
+        if (Object.keys(newState).length > 0) {
+            setSignalState(signalId, newState);
+        } else {
+            updateStatus(emergencyStatus, "No state data to save.", true);
+        }
+    }
+
+    // --- Event Listeners ---
+    document.getElementById('refreshSignalsBtn').addEventListener('click', fetchSignals);
+    document.getElementById('triggerEmergencyBtn').addEventListener('click', () => {
+        const signalId = emergencySignalIdSelect.value;
+        if (signalId) triggerEmergency(signalId);
+        else updateStatus(emergencyStatus, "Please select a signal ID first.", true);
+    });
+    document.getElementById('endEmergencyBtn').addEventListener('click', () => {
+        const signalId = emergencySignalIdSelect.value;
+        if (signalId) endEmergency(signalId);
+        else updateStatus(emergencyStatus, "Please select a signal ID first.", true);
+    });
+    document.getElementById('runSimulationBtn').addEventListener('click', runSimulation);
+    document.getElementById('fetchLogBtn').addEventListener('click', fetchSimulationLog);
+
+    // Modal listeners
+    document.getElementById('saveStateBtn').addEventListener('click', handleSaveState);
+    document.getElementById('cancelStateBtn').addEventListener('click', closeModal);
+    // Close modal if clicking outside of it (on the overlay)
+    signalStateModal.addEventListener('click', (event) => {
+        if (event.target === signalStateModal) { // Check if the click is on the overlay itself
+            closeModal();
+        }
+    });
+
+
+    // --- Initial Load ---
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchSignals();
+        simulationLogOutput.textContent = 'Simulation log will appear here...';
+    });
+
+</script>
+{% endblock %}
