@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart City Dashboard{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Custom global styles if needed */
+        body {
+            font-family: 'Arial', sans-serif;
+        }
+        .nav-link {
+            @apply px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-200 transition-colors;
+        }
+        .nav-link-active {
+            @apply px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{{ url_for('home') }}" class="text-2xl font-bold text-blue-600">Smart City OS</a>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}nav-link-active{% endif %}">Home</a>
+                        <!-- These will point to the actual running applications -->
+                        <!-- For now, using placeholders or direct links if apps run on known ports -->
+                        <a href="/citizen/dashboard" class="nav-link">Citizen Reporting</a>
+                        <a href="/waste/dashboard" class="nav-link">Waste Management</a>
+                        <a href="{{ url_for('traffic_bp.dashboard') }}" class="nav-link {% if request.blueprint == 'traffic_bp' %}nav-link-active{% endif %}">Traffic Management</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center p-4 mt-8">
+        <p>&copy; 2023 Smart City OS</p>
+    </footer>
+</body>
+</html>
