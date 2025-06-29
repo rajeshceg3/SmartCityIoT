@@ -5,52 +5,78 @@ Traffic Management - Smart City Dashboard
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto p-4">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Traffic Management Control Center</h1>
+<script>
+    // Config is inherited from layout.html, but ensure extended colors/animations are merged or available
+    if (typeof tailwind !== 'undefined' && typeof tailwind.config !== 'undefined') {
+        tailwind.config.theme = tailwind.config.theme || {};
+        tailwind.config.theme.extend = tailwind.config.theme.extend || {};
+        tailwind.config.theme.extend.colors = tailwind.config.theme.extend.colors || {};
+        tailwind.config.theme.extend.colors.primary = tailwind.config.theme.extend.colors.primary || { DEFAULT: '#3B82F6', dark: '#2563EB' };
+        tailwind.config.theme.extend.colors.secondary = tailwind.config.theme.extend.colors.secondary|| { DEFAULT: '#6B7280', light: '#D1D5DB', dark: '#4B5563', darker: '#374151', lightest: '#F9FAFB' };
+        tailwind.config.theme.extend.colors.success = tailwind.config.theme.extend.colors.success || { DEFAULT: '#10B981', dark: '#059669' };
+        tailwind.config.theme.extend.colors.error = tailwind.config.theme.extend.colors.error || { DEFAULT: '#EF4444', dark: '#DC2626' };
+        tailwind.config.theme.extend.colors.warning = tailwind.config.theme.extend.colors.warning || { DEFAULT: '#F59E0B', dark: '#D97706' };
+        tailwind.config.theme.extend.colors.info = tailwind.config.theme.extend.colors.info || { DEFAULT: '#6366F1', dark: '#4F46E5' };
+        tailwind.config.theme.extend.fontFamily = tailwind.config.theme.extend.fontFamily || {};
+        tailwind.config.theme.extend.fontFamily.sans = tailwind.config.theme.extend.fontFamily.sans || ['Inter', 'system-ui', 'sans-serif'];
+        tailwind.config.theme.extend.animation = tailwind.config.theme.extend.animation || { fadeIn: 'fadeIn 0.5s ease-out forwards' };
+        tailwind.config.theme.extend.keyframes = tailwind.config.theme.extend.keyframes || { fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } } };
+    }
+</script>
+<div class="container mx-auto p-4 font-sans"> {/* animate-fadeIn is on layout.html's main block */}
+    <h1 class="text-3xl font-bold text-primary-dark mb-6 text-center">Traffic Management Control Center</h1>
 
     <!-- Signals Overview Section -->
     <div class="bg-white p-6 rounded-lg shadow-xl mb-8">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-semibold text-gray-700">Traffic Signals Status</h2>
-            <button id="refreshSignalsBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
+            <h2 class="text-2xl font-semibold text-primary">Traffic Signals Status</h2>
+            <button id="refreshSignalsBtn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded transition-all duration-150 ease-in-out active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
                 Refresh Signals
             </button>
         </div>
         <div id="signalsTableContainer" class="overflow-x-auto">
             <table class="min-w-full bg-white">
-                <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                <thead class="bg-secondary-lightest text-secondary-darker uppercase text-sm leading-normal">
                     <tr>
-                        <th class="py-3 px-6 text-left">Signal ID</th>
-                        <th class="py-3 px-6 text-left">Location</th>
-                        <th class="py-3 px-6 text-left">Current State</th>
-                        <th class="py-3 px-6 text-left">Lanes Controlled</th>
-                        <th class="py-3 px-6 text-center">Actions</th>
+                        <th class="py-3 px-6 text-left border-b border-secondary-light">Signal ID</th>
+                        <th class="py-3 px-6 text-left border-b border-secondary-light">Location</th>
+                        <th class="py-3 px-6 text-left border-b border-secondary-light">Current State</th>
+                        <th class="py-3 px-6 text-left border-b border-secondary-light">Lanes Controlled</th>
+                        <th class="py-3 px-6 text-center border-b border-secondary-light">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="signalsTableBody" class="text-gray-600 text-sm font-light">
+                <tbody id="signalsTableBody" class="text-secondary-dark text-sm font-light">
                     <!-- Signal rows will be populated here -->
                 </tbody>
             </table>
-            <div id="signalsLoading" class="text-center py-4 text-gray-500" style="display:none;">Loading signals...</div>
-            <div id="signalsError" class="text-center py-4 text-red-500" style="display:none;"></div>
+            <div id="signalsLoading" class="text-center py-4 text-primary" style="display:none;">
+                <svg class="animate-spin h-6 w-6 text-primary inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading signals...
+            </div>
+            <div id="signalsError" class="text-center py-4 text-error" style="display:none;">
+                 <!-- Error message will be set by JS -->
+            </div>
         </div>
     </div>
 
     <!-- Emergency Management Section -->
     <div class="bg-white p-6 rounded-lg shadow-xl mb-8">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Emergency Preemption Control</h2>
+        <h2 class="text-2xl font-semibold text-primary mb-4">Emergency Preemption Control</h2>
         <div class="grid md:grid-cols-2 gap-4 items-end">
             <div>
-                <label for="emergencySignalId" class="block text-sm font-medium text-gray-700">Target Signal ID:</label>
-                <select id="emergencySignalId" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <label for="emergencySignalId" class="block text-sm font-medium text-secondary-darker">Target Signal ID:</label>
+                <select id="emergencySignalId" class="mt-1 block w-full py-2 px-3 border border-secondary-light bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary focus:ring-opacity-50 sm:text-sm transition-all duration-150 ease-in-out">
                     <!-- Options will be populated by JS -->
                 </select>
             </div>
             <div class="flex space-x-2">
-                <button id="triggerEmergencyBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors w-full md:w-auto">
+                <button id="triggerEmergencyBtn" class="bg-error hover:bg-error-dark text-white font-bold py-2 px-4 rounded transition-all duration-150 ease-in-out active:scale-95 w-full md:w-auto focus:outline-none focus:ring-2 focus:ring-error focus:ring-opacity-50">
                     Trigger Preemption
                 </button>
-                <button id="endEmergencyBtn" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded transition-colors w-full md:w-auto">
+                <button id="endEmergencyBtn" class="bg-warning hover:bg-warning-dark text-white font-bold py-2 px-4 rounded transition-all duration-150 ease-in-out active:scale-95 w-full md:w-auto focus:outline-none focus:ring-2 focus:ring-warning focus:ring-opacity-50">
                     End Preemption
                 </button>
             </div>
@@ -60,26 +86,26 @@ Traffic Management - Smart City Dashboard
 
     <!-- Simulation Control Section -->
     <div class="bg-white p-6 rounded-lg shadow-xl">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Traffic Simulation</h2>
+        <h2 class="text-2xl font-semibold text-primary mb-4">Traffic Simulation</h2>
         <div class="flex space-x-2 mb-4">
-            <button id="runSimulationBtn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">
+            <button id="runSimulationBtn" class="bg-success hover:bg-success-dark text-white font-bold py-2 px-4 rounded transition-all duration-150 ease-in-out active:scale-95 focus:outline-none focus:ring-2 focus:ring-success focus:ring-opacity-50">
                 Run Full Simulation Scenario
             </button>
-            <button id="fetchLogBtn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors">
+            <button id="fetchLogBtn" class="bg-info hover:bg-info-dark text-white font-bold py-2 px-4 rounded transition-all duration-150 ease-in-out active:scale-95 focus:outline-none focus:ring-2 focus:ring-info focus:ring-opacity-50">
                 Fetch Latest Simulation Log
             </button>
         </div>
         <div id="simulationStatus" class="mb-4 text-sm"></div>
-        <div class="bg-gray-50 p-4 rounded shadow">
-            <h3 class="text-lg font-semibold text-gray-600 mb-2">Simulation Log:</h3>
-            <pre id="simulationLogOutput" class="text-xs bg-black text-green-400 p-4 rounded-md overflow-x-auto h-64 whitespace-pre-wrap"></pre>
+        <div class="bg-secondary-lightest p-4 rounded shadow">
+            <h3 class="text-lg font-semibold text-secondary-darker mb-2">Simulation Log:</h3>
+            <pre id="simulationLogOutput" class="text-xs bg-gray-800 text-gray-200 p-4 rounded-md overflow-x-auto h-64 whitespace-pre-wrap font-mono"></pre>
         </div>
     </div>
 
 </div>
 
 <!-- Modal for Signal State Update -->
-<div id="signalStateModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+<div id="signalStateModal" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
   <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
     <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
     <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
@@ -87,19 +113,19 @@ Traffic Management - Smart City Dashboard
       <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
         <div class="sm:flex sm:items-start">
           <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Update Signal State</h3>
+            <h3 class="text-lg leading-6 font-medium text-primary-dark" id="modal-title">Update Signal State</h3>
             <input type="hidden" id="modalSignalId">
-            <div class="mt-2" id="modalStateInputs">
+            <div class="mt-4 space-y-4" id="modalStateInputs">
               <!-- State inputs will be populated here -->
             </div>
           </div>
         </div>
       </div>
-      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-        <button type="button" id="saveStateBtn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+      <div class="bg-secondary-lightest px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <button type="button" id="saveStateBtn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm transition-all duration-150 ease-in-out active:scale-95">
           Save Changes
         </button>
-        <button type="button" id="cancelStateBtn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+        <button type="button" id="cancelStateBtn" class="mt-3 w-full inline-flex justify-center rounded-md border border-secondary-light shadow-sm px-4 py-2 bg-white text-base font-medium text-secondary-dark hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-150 ease-in-out active:scale-95">
           Cancel
         </button>
       </div>
@@ -108,7 +134,7 @@ Traffic Management - Smart City Dashboard
 </div>
 
 <script>
-    const API_BASE_URL = '/traffic'; // Assuming blueprint is registered at /traffic
+    const API_BASE_URL = '/traffic';
 
     const signalsTableBody = document.getElementById('signalsTableBody');
     const signalsLoading = document.getElementById('signalsLoading');
@@ -118,164 +144,117 @@ Traffic Management - Smart City Dashboard
     const simulationStatus = document.getElementById('simulationStatus');
     const simulationLogOutput = document.getElementById('simulationLogOutput');
 
-    // Modal elements
     const signalStateModal = document.getElementById('signalStateModal');
     const modalSignalIdInput = document.getElementById('modalSignalId');
     const modalStateInputsContainer = document.getElementById('modalStateInputs');
 
-    // --- Utility Functions ---
+    const successIconSVG = `<svg class="w-5 h-5 inline-block mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>`;
+    const errorIconSVG = `<svg class="w-5 h-5 inline-block mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v4a1 1 0 102 0V5zm-1 6a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path></svg>`;
+    const infoIconSVG = `<svg class="w-5 h-5 inline-block mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>`;
+
     function showLoading(element, message = "Loading...") {
-        element.textContent = message;
         element.style.display = 'block';
+        if (element.id === 'signalsLoading') {
+             element.innerHTML = `<svg class="animate-spin h-6 w-6 text-primary inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle> <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg> ${message}`;
+        } else { element.textContent = message; }
+    }
+    function hideLoading(element) { element.style.display = 'none'; }
+    function showError(element, message) { element.innerHTML = `${errorIconSVG} ${message}`; element.className = 'text-center py-4 text-error'; element.style.display = 'block'; }
+    function hideError(element) { element.style.display = 'none'; }
+
+    function updateStatus(element, message, type = 'info') {
+        let icon = infoIconSVG; let textColorClass = 'text-info';
+        if (type === 'success') { icon = successIconSVG; textColorClass = 'text-success'; }
+        else if (type === 'error') { icon = errorIconSVG; textColorClass = 'text-error'; }
+        element.innerHTML = `${icon} ${message}`;
+        element.className = element.className.replace(/text-(success|error|info|primary|secondary-darker)/g, '');
+        element.classList.add('mt-4', 'text-sm', textColorClass);
     }
 
-    function hideLoading(element) {
-        element.style.display = 'none';
-    }
-
-    function showError(element, message) {
-        element.textContent = message;
-        element.style.display = 'block';
-    }
-
-    function hideError(element) {
-        element.style.display = 'none';
-    }
-
-    function updateStatus(element, message, isError = false) {
-        element.textContent = message;
-        element.className = isError ? 'mt-4 text-sm text-red-500' : 'mt-4 text-sm text-green-700';
-    }
-
-    // --- API Fetch Functions ---
     async function fetchSignals() {
-        showLoading(signalsLoading);
-        hideError(signalsError);
-        signalsTableBody.innerHTML = ''; // Clear previous
+        showLoading(signalsLoading); hideError(signalsError); signalsTableBody.innerHTML = '';
         try {
             const response = await fetch(`${API_BASE_URL}/signals`);
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: "Failed to fetch signals. Status: " + response.status }));
-                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) { const errorData = await response.json().catch(() => ({ error: "Failed to fetch signals. Status: " + response.status })); throw new Error(errorData.error || `HTTP error! status: ${response.status}`); }
             const signals = await response.json();
-            populateSignalsTable(signals);
-            populateSignalSelect(signals);
-        } catch (error) {
-            console.error('Error fetching signals:', error);
-            showError(signalsError, `Error fetching signals: ${error.message}`);
-        } finally {
-            hideLoading(signalsLoading);
-        }
+            populateSignalsTable(signals); populateSignalSelect(signals);
+        } catch (error) { console.error('Error fetching signals:', error); showError(signalsError, `Error fetching signals: ${error.message}`);
+        } finally { hideLoading(signalsLoading); }
     }
 
     async function setSignalState(signalId, state) {
+        updateStatus(emergencyStatus, 'Updating signal state...', 'info');
         try {
-            const response = await fetch(`${API_BASE_URL}/signals/${signalId}/set_state`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(state)
-            });
+            const response = await fetch(`${API_BASE_URL}/signals/${signalId}/set_state`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state) });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || `HTTP error! status: ${response.status}`);
-            updateStatus(emergencyStatus, `Signal ${signalId} state updated successfully. New state: ${JSON.stringify(result.new_state)}`);
-            fetchSignals(); // Refresh table
-            closeModal();
-        } catch (error) {
-            console.error('Error setting signal state:', error);
-            updateStatus(emergencyStatus, `Error setting signal state: ${error.message}`, true);
-        }
+            updateStatus(emergencyStatus, `Signal ${signalId} state updated. New state: ${JSON.stringify(result.new_state)}`, 'success');
+            fetchSignals(); closeModal();
+        } catch (error) { console.error('Error setting signal state:', error); updateStatus(emergencyStatus, `Error setting signal state: ${error.message}`, 'error'); }
     }
 
     async function triggerEmergency(signalId) {
-        updateStatus(emergencyStatus, 'Triggering emergency preemption...');
+        updateStatus(emergencyStatus, 'Triggering emergency preemption...', 'info');
         try {
-            const response = await fetch(`${API_BASE_URL}/emergency/trigger`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ signal_id: signalId, vehicle_id: "WebAppEV01", location: [1,1] }) // Example data
-            });
+            const response = await fetch(`${API_BASE_URL}/emergency/trigger`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ signal_id: signalId, vehicle_id: "WebAppEV01", location: [1,1] }) });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || `HTTP error! status: ${response.status}`);
-            updateStatus(emergencyStatus, result.message + ` Mode Active: ${result.emergency_mode_active}`);
-            fetchSignals(); // Refresh signals to show updated states
-        } catch (error) {
-            console.error('Error triggering emergency:', error);
-            updateStatus(emergencyStatus, `Error: ${error.message}`, true);
-        }
+            updateStatus(emergencyStatus, result.message + ` Mode Active: ${result.emergency_mode_active}`, 'success');
+            fetchSignals();
+        } catch (error) { console.error('Error triggering emergency:', error); updateStatus(emergencyStatus, `Error: ${error.message}`, 'error'); }
     }
 
     async function endEmergency(signalId) {
-        updateStatus(emergencyStatus, 'Ending emergency preemption...');
+        updateStatus(emergencyStatus, 'Ending emergency preemption...', 'info');
         try {
-            const response = await fetch(`${API_BASE_URL}/emergency/end`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ signal_id: signalId })
-            });
+            const response = await fetch(`${API_BASE_URL}/emergency/end`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ signal_id: signalId }) });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || `HTTP error! status: ${response.status}`);
-            updateStatus(emergencyStatus, result.message + ` Mode Active: ${result.emergency_mode_active}`);
-            fetchSignals(); // Refresh signals
-        } catch (error) {
-            console.error('Error ending emergency:', error);
-            updateStatus(emergencyStatus, `Error: ${error.message}`, true);
-        }
+            updateStatus(emergencyStatus, result.message + ` Mode Active: ${result.emergency_mode_active}`, 'success');
+            fetchSignals();
+        } catch (error) { console.error('Error ending emergency:', error); updateStatus(emergencyStatus, `Error: ${error.message}`, 'error'); }
     }
 
     async function runSimulation() {
-        updateStatus(simulationStatus, 'Running simulation scenario...');
-        simulationLogOutput.textContent = 'Starting simulation...';
+        updateStatus(simulationStatus, 'Running simulation scenario...', 'info'); simulationLogOutput.textContent = 'Starting simulation...';
         try {
             const response = await fetch(`${API_BASE_URL}/simulation/run`, { method: 'POST' });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || `HTTP error! status: ${response.status}`);
-            updateStatus(simulationStatus, `${result.message} Sim ID: ${result.simulation_id}`);
+            updateStatus(simulationStatus, `${result.message} Sim ID: ${result.simulation_id}`, 'success');
             simulationLogOutput.textContent = `Simulation ${result.simulation_id} run. Log preview (last 5 entries):\n` + (result.log_preview || []).join('\n');
-            fetchSignals(); // Simulation might change global signal states if designed to interact
-        } catch (error) {
-            console.error('Error running simulation:', error);
-            updateStatus(simulationStatus, `Error: ${error.message}`, true);
-            simulationLogOutput.textContent += `\nError: ${error.message}`;
-        }
+            fetchSignals();
+        } catch (error) { console.error('Error running simulation:', error); updateStatus(simulationStatus, `Error: ${error.message}`, 'error'); simulationLogOutput.textContent += `\nError: ${error.message}`; }
     }
 
     async function fetchSimulationLog() {
-        updateStatus(simulationStatus, 'Fetching simulation log...');
-        simulationLogOutput.textContent = 'Fetching log...';
+        updateStatus(simulationStatus, 'Fetching simulation log...', 'info'); simulationLogOutput.textContent = 'Fetching log...';
         try {
             const response = await fetch(`${API_BASE_URL}/simulation/log`);
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || `HTTP error! status: ${response.status}`);
-            updateStatus(simulationStatus, `Log for simulation ${result.simulation_id} fetched.`);
+            updateStatus(simulationStatus, `Log for simulation ${result.simulation_id} fetched.`, 'success');
             simulationLogOutput.textContent = (result.log || ["Log is empty or not available."]).join('\n');
-        } catch (error) {
-            console.error('Error fetching simulation log:', error);
-            updateStatus(simulationStatus, `Error: ${error.message}`, true);
-            simulationLogOutput.textContent += `\nError: ${error.message}`;
-        }
+        } catch (error) { console.error('Error fetching simulation log:', error); updateStatus(simulationStatus, `Error: ${error.message}`, 'error'); simulationLogOutput.textContent += `\nError: ${error.message}`; }
     }
 
-    // --- DOM Manipulation ---
     function populateSignalsTable(signals) {
-        signalsTableBody.innerHTML = ''; // Clear previous
+        signalsTableBody.innerHTML = '';
         if (!signals || signals.length === 0) {
-            signalsTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No signals found.</td></tr>';
+            signalsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-secondary-dark"> <div class="flex flex-col items-center justify-center"> <svg class="w-12 h-12 text-secondary-light mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> No signals found. </div> </td></tr>`;
             return;
         }
-        signals.forEach(signal => {
+        signals.forEach((signal, index) => {
             const row = signalsTableBody.insertRow();
-            row.className = 'border-b border-gray-200 hover:bg-gray-100';
-            row.insertCell().textContent = signal.signal_id;
-            row.insertCell().textContent = signal.location ? `Lat: ${signal.location[0].toFixed(3)}, Lon: ${signal.location[1].toFixed(3)}` : 'N/A';
-            row.insertCell().textContent = signal.current_state ? JSON.stringify(signal.current_state) : 'N/A';
-            row.insertCell().textContent = signal.lanes_controlled ? signal.lanes_controlled.join(', ') : 'N/A';
-
-            const actionsCell = row.insertCell();
-            actionsCell.className = 'py-3 px-6 text-center';
-            const editButton = document.createElement('button');
-            editButton.textContent = 'Edit State';
-            editButton.className = 'bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-1 px-2 rounded text-xs transition-colors';
+            const stripingClass = index % 2 === 0 ? 'bg-white' : 'bg-secondary-lightest';
+            row.className = `${stripingClass} border-b border-secondary-light hover:bg-primary/10 transition-colors duration-150 ease-in-out`;
+            row.insertCell().textContent = signal.signal_id; row.cells[0].className = 'py-3 px-6';
+            row.insertCell().textContent = signal.location ? `Lat: ${signal.location[0].toFixed(3)}, Lon: ${signal.location[1].toFixed(3)}` : 'N/A'; row.cells[1].className = 'py-3 px-6';
+            row.insertCell().textContent = signal.current_state ? JSON.stringify(signal.current_state) : 'N/A'; row.cells[2].className = 'py-3 px-6';
+            row.insertCell().textContent = signal.lanes_controlled ? signal.lanes_controlled.join(', ') : 'N/A'; row.cells[3].className = 'py-3 px-6';
+            const actionsCell = row.insertCell(); actionsCell.className = 'py-3 px-6 text-center';
+            const editButton = document.createElement('button'); editButton.textContent = 'Edit State';
+            editButton.className = 'bg-info hover:bg-info-dark text-white font-bold py-1 px-3 rounded text-xs transition-all duration-150 ease-in-out active:scale-95 focus:outline-none focus:ring-2 focus:ring-info focus:ring-opacity-50';
             editButton.onclick = () => openModalForSignal(signal);
             actionsCell.appendChild(editButton);
         });
@@ -285,94 +264,50 @@ Traffic Management - Smart City Dashboard
         emergencySignalIdSelect.innerHTML = '<option value="">-- Select Signal --</option>';
         if (signals && signals.length > 0) {
             signals.forEach(signal => {
-                const option = document.createElement('option');
-                option.value = signal.signal_id;
+                const option = document.createElement('option'); option.value = signal.signal_id;
                 option.textContent = signal.signal_id + (signal.location ? ` (Loc: ${signal.location[0].toFixed(2)},${signal.location[1].toFixed(2)})` : '');
                 emergencySignalIdSelect.appendChild(option);
             });
         }
     }
 
-    // --- Modal Logic ---
     function openModalForSignal(signal) {
-        modalSignalIdInput.value = signal.signal_id;
-        modalStateInputsContainer.innerHTML = ''; // Clear previous inputs
-
+        modalSignalIdInput.value = signal.signal_id; modalStateInputsContainer.innerHTML = '';
         if (signal.current_state && typeof signal.current_state === 'object') {
             Object.entries(signal.current_state).forEach(([aspect, color]) => {
-                const aspectDiv = document.createElement('div');
-                aspectDiv.className = 'mb-2';
-                const label = document.createElement('label');
-                label.for = `modal-aspect-${aspect}`;
-                label.className = 'block text-sm font-medium text-gray-700 capitalize';
-                label.textContent = `${aspect}:`;
-
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.id = `modal-aspect-${aspect}`;
-                input.name = aspect;
-                input.value = color;
-                input.className = 'mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
-
-                aspectDiv.appendChild(label);
-                aspectDiv.appendChild(input);
+                const aspectDiv = document.createElement('div'); aspectDiv.className = 'mb-3';
+                const label = document.createElement('label'); label.for = `modal-aspect-${aspect}`;
+                label.className = 'block text-sm font-medium text-secondary-darker capitalize'; label.textContent = `${aspect}:`;
+                const input = document.createElement('input'); input.type = 'text'; input.id = `modal-aspect-${aspect}`;
+                input.name = aspect; input.value = color;
+                input.className = 'mt-1 block w-full py-2 px-3 border border-secondary-light bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm transition-all duration-150 ease-in-out';
+                aspectDiv.appendChild(label); aspectDiv.appendChild(input);
                 modalStateInputsContainer.appendChild(aspectDiv);
             });
-        } else {
-            modalStateInputsContainer.innerHTML = '<p class="text-sm text-gray-500">Signal state is not available or not in expected format.</p>';
-        }
+        } else { modalStateInputsContainer.innerHTML = `<p class="text-sm text-secondary-dark">${infoIconSVG} Signal state is not available or not in expected format.</p>`; }
         signalStateModal.classList.remove('hidden');
     }
-
-    function closeModal() {
-        signalStateModal.classList.add('hidden');
-    }
-
+    function closeModal() { signalStateModal.classList.add('hidden'); }
     function handleSaveState() {
-        const signalId = modalSignalIdInput.value;
-        const newState = {};
+        const signalId = modalSignalIdInput.value; const newState = {};
         const inputs = modalStateInputsContainer.querySelectorAll('input[type="text"]');
-        inputs.forEach(input => {
-            newState[input.name] = input.value;
-        });
-        if (Object.keys(newState).length > 0) {
-            setSignalState(signalId, newState);
-        } else {
-            updateStatus(emergencyStatus, "No state data to save.", true);
-        }
+        inputs.forEach(input => { newState[input.name] = input.value; });
+        if (Object.keys(newState).length > 0) { setSignalState(signalId, newState); }
+        else { updateStatus(emergencyStatus, "No state data to save.", 'error'); }
     }
 
-    // --- Event Listeners ---
     document.getElementById('refreshSignalsBtn').addEventListener('click', fetchSignals);
-    document.getElementById('triggerEmergencyBtn').addEventListener('click', () => {
-        const signalId = emergencySignalIdSelect.value;
-        if (signalId) triggerEmergency(signalId);
-        else updateStatus(emergencyStatus, "Please select a signal ID first.", true);
-    });
-    document.getElementById('endEmergencyBtn').addEventListener('click', () => {
-        const signalId = emergencySignalIdSelect.value;
-        if (signalId) endEmergency(signalId);
-        else updateStatus(emergencyStatus, "Please select a signal ID first.", true);
-    });
+    document.getElementById('triggerEmergencyBtn').addEventListener('click', () => { const signalId = emergencySignalIdSelect.value; if (signalId) triggerEmergency(signalId); else updateStatus(emergencyStatus, "Please select a signal ID first.", 'error'); });
+    document.getElementById('endEmergencyBtn').addEventListener('click', () => { const signalId = emergencySignalIdSelect.value; if (signalId) endEmergency(signalId); else updateStatus(emergencyStatus, "Please select a signal ID first.", 'error'); });
     document.getElementById('runSimulationBtn').addEventListener('click', runSimulation);
     document.getElementById('fetchLogBtn').addEventListener('click', fetchSimulationLog);
-
-    // Modal listeners
     document.getElementById('saveStateBtn').addEventListener('click', handleSaveState);
     document.getElementById('cancelStateBtn').addEventListener('click', closeModal);
-    // Close modal if clicking outside of it (on the overlay)
-    signalStateModal.addEventListener('click', (event) => {
-        if (event.target === signalStateModal) { // Check if the click is on the overlay itself
-            closeModal();
-        }
-    });
-
-
-    // --- Initial Load ---
+    signalStateModal.addEventListener('click', (event) => { if (event.target === signalStateModal) { closeModal(); } });
     document.addEventListener('DOMContentLoaded', () => {
-        fetchSignals();
-        simulationLogOutput.textContent = 'Simulation log will appear here...';
+        fetchSignals(); simulationLogOutput.textContent = 'Simulation log will appear here...';
+        updateStatus(emergencyStatus, 'Select a signal and operation.', 'info');
+        updateStatus(simulationStatus, 'Run simulation or fetch logs.', 'info');
     });
-
 </script>
 {% endblock %}

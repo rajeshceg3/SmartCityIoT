@@ -5,48 +5,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Smart City Dashboard{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+    <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                primary: { DEFAULT: '#3B82F6', dark: '#2563EB' },
+                secondary: { DEFAULT: '#6B7280', light: '#D1D5DB', dark: '#4B5563', darker: '#374151', lightest: '#F9FAFB' }, // Added darker & lightest from prev steps
+                success: { DEFAULT: '#10B981', dark: '#059669' },
+                error: { DEFAULT: '#EF4444', dark: '#DC2626' },
+                warning: { DEFAULT: '#F59E0B', dark: '#D97706' },
+                info: { DEFAULT: '#6366F1', dark: '#4F46E5' }
+              },
+              fontFamily: {
+                sans: ['Inter', 'system-ui', 'sans-serif'],
+              },
+              animation: { // Added for page fadeIn
+                fadeIn: 'fadeIn 0.5s ease-out forwards',
+              },
+              keyframes: { // Added for page fadeIn
+                fadeIn: {
+                  '0%': { opacity: '0', transform: 'translateY(10px)' },
+                  '100%': { opacity: '1', transform: 'translateY(0)' },
+                }
+              }
+            }
+          }
+        }
+      </script>
     <style>
-        /* Custom global styles if needed */
-        body {
-            font-family: 'Arial', sans-serif;
-        }
-        .nav-link {
-            @apply px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-200 transition-colors;
-        }
-        .nav-link-active {
-            @apply px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md;
+        /* Minimal custom styles */
+        /* Ensure icons in nav links align well if needed, though flex should handle it */
+        .nav-link-icon {
+            margin-right: 0.5rem; /* Adjust as needed */
+            /* Ensure icon color inherits or is set correctly */
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <nav class="bg-white shadow-md">
+<body class="font-sans bg-secondary-light">
+    <nav class="bg-white shadow-lg border-b border-secondary-light">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center">
-                    <a href="{{ url_for('home') }}" class="text-2xl font-bold text-blue-600">Smart City OS</a>
+                    <a href="{{ url_for('home') }}" class="text-2xl font-bold text-primary-dark">Smart City OS</a>
                 </div>
                 <div class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}nav-link-active{% endif %}">Home</a>
-                        <!-- These will point to the actual running applications -->
-                        <!-- For now, using placeholders or direct links if apps run on known ports -->
-                        <a href="/citizen/dashboard" class="nav-link">Citizen Reporting</a>
-                        <a href="/waste/dashboard" class="nav-link">Waste Management</a>
-                        <a href="{{ url_for('traffic_bp.dashboard') }}" class="nav-link {% if request.blueprint == 'traffic_bp' %}nav-link-active{% endif %}">Traffic Management</a>
+                    <div class="ml-10 flex items-baseline space-x-1"> {/* Reduced space-x for icon room */}
+                        <a href="{{ url_for('home') }}"
+                           class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-150 ease-in-out active:scale-95
+                                  {% if request.endpoint == 'home' %}
+                                    bg-primary text-white
+                                  {% else %}
+                                    text-secondary-dark hover:bg-primary hover:text-white
+                                  {% endif %}">
+                            <svg class="h-5 w-5 nav-link-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
+                            Home
+                        </a>
+                        <a href="/citizen/dashboard"
+                           class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-secondary-dark hover:bg-primary hover:text-white transition-all duration-150 ease-in-out active:scale-95">
+                           <svg class="h-5 w-5 nav-link-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3.004 3.004 0 013.75-2.906z" /></svg>
+                           Citizen Reporting
+                        </a>
+                        <a href="/waste/dashboard"
+                           class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-secondary-dark hover:bg-primary hover:text-white transition-all duration-150 ease-in-out active:scale-95">
+                           <svg class="h-5 w-5 nav-link-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                           Waste Management
+                        </a>
+                        <a href="{{ url_for('traffic_bp.dashboard') }}"
+                           class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-150 ease-in-out active:scale-95
+                                  {% if request.blueprint == 'traffic_bp' %}
+                                    bg-primary text-white
+                                  {% else %}
+                                    text-secondary-dark hover:bg-primary hover:text-white
+                                  {% endif %}">
+                            <svg class="h-5 w-5 nav-link-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 002.763 7.051A9.948 9.948 0 009.91 19c.312 0 .62-.017.926-.051.396.56.86.994 1.378 1.385A10.01 10.01 0 0010 20a9.995 9.995 0 00-9.5-8.051C.154 11.174 0 10.341 0 9.5A9.5 9.5 0 0110 0c.056 0 .112.002.168.005C10.112.003 10.056 0 10 0c-.056.001-.112.002-.168.005.056-.003.112-.005.168-.005a11.904 11.904 0 004.093 1.015c.985-.205 1.84-.61 2.55-1.121A11.954 11.954 0 0010 1.944zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path></svg>
+                           Traffic Management
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main>
+    <main class="opacity-0 animate-fadeIn">
         <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             {% block content %}
             {% endblock %}
         </div>
     </main>
 
-    <footer class="bg-gray-800 text-white text-center p-4 mt-8">
+    <footer class="bg-secondary-dark text-secondary-light text-center p-4 mt-8">
         <p>&copy; 2023 Smart City OS</p>
     </footer>
 </body>
