@@ -127,4 +127,38 @@ This module provides tools for monitoring traffic signals, managing emergency ve
 
 ---
 
+### 4. Energy Management (Smart Streetlights)
+
+This module provides functionalities for managing and monitoring smart streetlights within the city.
+
+*   **Access via Main Dashboard:** Navigate to the "Energy Management" section from the main dashboard (links to `/energy/dashboard`).
+*   **Features:**
+    *   View and update streetlight status (ON, OFF, FAULTY).
+    *   Control streetlight brightness levels.
+    *   Report and track streetlight malfunctions (currently sets status to FAULTY).
+    *   (Future: Simulate energy consumption, adaptive lighting schedules).
+*   **API Endpoints (prefixed by `/energy` relative to the main dashboard URL):**
+    *   `GET /energy/streetlights`: List all streetlights (filterable by `status`).
+        *   Query param: `status` (e.g., `ON`, `OFF`, `FAULTY`)
+    *   `POST /energy/streetlights`: Create a new streetlight.
+        *   Payload: `{"light_id": "str", "location": {"lat": float, "lon": float}, "power_consumption_watts": float (optional)}`
+    *   `GET /energy/streetlights/<light_id>`: Get details of a specific streetlight.
+    *   `PUT /energy/streetlights/<light_id>/status`: Update a streetlight's status and brightness.
+        *   Payload: `{"status": "str (ON/OFF/FAULTY)", "brightness_level": int (0-100, optional)}`
+    *   `POST /energy/streetlights/<light_id>/report_fault`: Report a fault for a streetlight (sets status to FAULTY).
+        *   Payload: `{"description": "str (currently informational, not stored long-term)"}`
+*   **Standalone Operation (Optional):**
+    ```bash
+    python -m energy_management.api
+    ```
+    This typically runs on `http://127.0.0.1:5003/`. The UI would then be accessed at `http://127.0.0.1:5003/dashboard`.
+*   **Unit Tests:**
+    ```bash
+    python -m unittest energy_management.tests.test_streetlight_manager
+    # or
+    python -m unittest discover -s energy_management/tests -v
+    ```
+
+---
+
 *(Note: Test execution may face timeouts in some sandboxed environments.)*
