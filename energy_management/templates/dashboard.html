@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Management Dashboard</title>
+    <!-- Link to a shared CSS file if available, or add basic styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        header { background-color: #007bff; color: white; padding: 10px 0; text-align: center; }
+        nav ul { list-style-type: none; padding: 0; text-align: center; background-color: #333; }
+        nav ul li { display: inline; margin-right: 20px; }
+        nav ul li a { color: white; text-decoration: none; padding: 10px; display: inline-block; }
+        nav ul li a:hover { background-color: #555; }
+        .container { margin-top: 20px; padding: 20px; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        p { line-height: 1.6; }
+        footer { text-align: center; margin-top: 30px; padding: 15px; background-color: #333; color: white; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Smart City IoT Platform</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <!-- Assuming a main_dashboard.home route exists -->
+            <li><a href="/">Home</a></li>
+            <!-- Link to this module's dashboard (already here) -->
+            <!-- Add other main module links if known, e.g.
+            <li><a href="/traffic/dashboard">Traffic</a></li>
+            <li><a href="/waste/dashboard">Waste</a></li>
+            <li><a href="/citizen/dashboard">Citizen Reporting</a></li>
+            -->
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>Streetlight Management Dashboard</h1>
+        <p>Welcome to the Smart Streetlight Management module. From here, you will be able to monitor and control city streetlights.</p>
+
+        <h2>Streetlight Status Overview</h2>
+        <p><em>(Streetlight data will be displayed here in a future update. For now, you can interact with streetlights via the API.)</em></p>
+
+        <h3>Available API Endpoints:</h3>
+        <ul>
+            <li><code>GET /energy/streetlights</code> - List all streetlights</li>
+            <li><code>POST /energy/streetlights</code> - Add a new streetlight</li>
+            <li><code>GET /energy/streetlights/&lt;light_id&gt;</code> - Get details for a specific streetlight</li>
+            <li><code>PUT /energy/streetlights/&lt;light_id&gt;/status</code> - Update status/brightness</li>
+            <li><code>POST /energy/streetlights/&lt;light_id&gt;/report_fault</code> - Report a fault</li>
+        </ul>
+
+        <p><a href="/">Return to Main Dashboard</a></p>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 SmartCityIoT Project</p>
+    </footer>
+</body>
+</html>
