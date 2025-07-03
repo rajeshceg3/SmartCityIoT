@@ -1,4 +1,5 @@
 import datetime
+import logging
 import random
 from typing import Tuple
 
@@ -50,7 +51,8 @@ def update_bin_fill_level(bin_instance: TrashBin, new_fill_level: float) -> Tras
 
     return bin_instance
 
-if __name__ == "__main__":
+def main():
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
     # Create a sample TrashBin instance
     sample_bin = TrashBin(
         bin_id="BIN_001",
@@ -58,11 +60,11 @@ if __name__ == "__main__":
         capacity_gallons=100.0
     )
 
-    print(f"Initial Bin State: {sample_bin}")
+    logging.info(f"Initial Bin State: {sample_bin}")
 
     # Simulate a few sensor readings and updates
     for i in range(5):
-        print(f"\n--- Simulation Step {i+1} ---")
+        logging.info(f"\n--- Simulation Step {i+1} ---")
 
         # 1. Generate a new sensor reading based on the current state
         simulated_new_level = generate_sensor_reading(
@@ -70,17 +72,20 @@ if __name__ == "__main__":
             sample_bin.current_fill_level_gallons,
             sample_bin.capacity_gallons
         )
-        print(f"Generated sensor reading (new fill level): {simulated_new_level:.2f} gallons")
+        logging.info(f"Generated sensor reading (new fill level): {simulated_new_level:.2f} gallons")
 
         # 2. Update the bin instance with this new reading
         sample_bin = update_bin_fill_level(sample_bin, simulated_new_level)
-        print(f"Updated Bin State: {sample_bin}")
+        logging.info(f"Updated Bin State: {sample_bin}")
 
         # If bin is full, simulate it being emptied for further simulations
         if sample_bin.status == 'FULL' and i < 4: # Don't empty on the very last step
-            print(f"Bin is FULL. Simulating emptying for next cycle.")
+            logging.info(f"Bin is FULL. Simulating emptying for next cycle.")
             sample_bin = update_bin_fill_level(sample_bin, 0.0) # Reset to empty
-            print(f"Bin State after emptying: {sample_bin}")
+            logging.info(f"Bin State after emptying: {sample_bin}")
 
-    print("\n--- Final Bin State after simulations ---")
-    print(sample_bin)
+    logging.info("\n--- Final Bin State after simulations ---")
+    logging.info(sample_bin)
+
+if __name__ == "__main__":
+    main()

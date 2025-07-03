@@ -1,4 +1,5 @@
 import datetime
+import logging
 from typing import Optional, List, Dict
 
 from .models import TrashBin
@@ -6,6 +7,7 @@ from .sensor_simulator import update_bin_fill_level as sim_update_bin_fill_level
 
 # Module-level dictionary to store bins in memory
 _bins: Dict[str, TrashBin] = {}
+logger = logging.getLogger(__name__)
 
 def add_bin(bin_id: str, location: Dict[str, float], capacity_gallons: float) -> TrashBin:
     """
@@ -86,62 +88,112 @@ def list_bins(status_filter: Optional[str] = None) -> List[TrashBin]:
         return [bin_obj for bin_obj in _bins.values() if bin_obj.status == status_filter]
     return list(_bins.values())
 
+def mark_bin_as_empty(bin_id: str) -> Optional[TrashBin]:
+    """
+    Marks a specific bin as empty, resetting its fill level and status.
+
+    Args:
+        bin_id: The ID of the bin to mark as empty.
+
+    Returns:
+        The updated TrashBin instance if found and marked empty, otherwise None.
+    """
+    bin_instance = get_bin(bin_id)
+    if bin_instance:
+        bin_instance.current_fill_level_gallons = 0.0
+        bin_instance.status = 'EMPTY'
+        bin_instance.last_updated = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        logger.info(f"Bin {bin_id} marked as empty.")
+        return bin_instance
+    else:
+        logger.warning(f"Attempted to mark non-existent bin {bin_id} as empty.")
+        return None
+
 if __name__ == "__main__":
-    print("--- Initializing Bin Manager ---")
+    # BasicConfig should be called only once, typically at application start.
+    # If other modules also call it, it might lead to unexpected behavior or override configurations.
+    # For a library module, it's often better not to call basicConfig directly,
+    # allowing the application using the library to set it up.
+    # However, for this script's direct execution, it's placed here.
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
+    logging.info("--- Initializing Bin Manager ---")
 
     # Add a couple of bins
     try:
         bin1 = add_bin(bin_id="BIN_001", location={'lat': 40.7128, 'lon': -74.0060}, capacity_gallons=100.0)
-        print(f"Added Bin: {bin1}")
+        logging.info(f"Added Bin: {bin1}")
         bin2 = add_bin(bin_id="BIN_002", location={'lat': 34.0522, 'lon': -118.2437}, capacity_gallons=75.0)
-        print(f"Added Bin: {bin2}")
+        logging.info(f"Added Bin: {bin2}")
     except ValueError as e:
-        print(f"Error adding bin: {e}")
+        logging.error(f"Error adding bin: {e}")
 
-    print("\n--- Current Bins ---")
+    logging.info("\n--- Current Bins ---")
     all_bins = list_bins()
     for b in all_bins:
-        print(b)
+        logging.info(b)
 
     # Update one bin using sensor data
-    print("\n--- Updating BIN_001 ---")
+    logging.info("\n--- Updating BIN_001 ---")
     # Simulate BIN_001 being filled to 85 gallons (which should make it 'FULL')
     updated_bin1 = update_bin_from_sensor_data(bin_id="BIN_001", new_fill_level=85.0)
     if updated_bin1:
-        print(f"Updated BIN_001: {updated_bin1}")
+        logging.info(f"Updated BIN_001: {updated_bin1}")
     else:
-        print("BIN_001 not found for update.")
+        logging.warning("BIN_001 not found for update.")
 
     # Update a non-existent bin
-    print("\n--- Attempting to update non-existent BIN_003 ---")
+    logging.info("\n--- Attempting to update non-existent BIN_003 ---")
     non_existent_bin = update_bin_from_sensor_data(bin_id="BIN_003", new_fill_level=50.0)
     if not non_existent_bin:
-        print("BIN_003 not found, as expected.")
+        logging.info("BIN_003 not found, as expected.")
 
-    print("\n--- Listing All Bins After Update ---")
+    logging.info("\n--- Listing All Bins After Update ---")
     all_bins_after_update = list_bins()
     for b in all_bins_after_update:
-        print(b)
+        logging.info(b)
 
-    print("\n--- Listing 'FULL' Bins ---")
+    logging.info("\n--- Listing 'FULL' Bins ---")
     full_bins = list_bins(status_filter='FULL')
     if full_bins:
         for b in full_bins:
-            print(b)
+            logging.info(b)
     else:
-        print("No bins are currently 'FULL'.")
+        logging.info("No bins are currently 'FULL'.")
 
-    print("\n--- Listing 'EMPTY' Bins ---")
+    logging.info("\n--- Listing 'EMPTY' Bins ---")
     empty_bins = list_bins(status_filter='EMPTY')
     if empty_bins:
         for b in empty_bins:
-            print(b)
+            logging.info(b)
     else:
-        print("No bins are currently 'EMPTY'.")
+        logging.info("No bins are currently 'EMPTY'.")
 
     # Example of trying to add an existing bin
-    print("\n--- Attempting to add existing BIN_001 again ---")
+    logging.info("\n--- Attempting to add existing BIN_001 again ---")
     try:
         add_bin(bin_id="BIN_001", location={'lat': 0, 'lon': 0}, capacity_gallons=10)
     except ValueError as e:
-        print(f"Error adding existing bin: {e}")
+        logging.error(f"Error adding existing bin: {e}")
+
+    # Test for mark_bin_as_empty
+    logging.info("\n--- Testing mark_bin_as_empty ---")
+    # First, ensure BIN_001 is not empty (it should be FULL from previous update)
+    bin_to_empty = get_bin("BIN_001")
+    if bin_to_empty and bin_to_empty.status != 'EMPTY':
+        logging.info(f"State of BIN_001 before emptying: {bin_to_empty}")
+        marked_empty_bin = mark_bin_as_empty("BIN_001")
+        if marked_empty_bin:
+            logging.info(f"State of BIN_001 after emptying: {marked_empty_bin}")
+        else:
+            logging.error("Failed to mark BIN_001 as empty, but it was expected to exist.")
+    elif bin_to_empty: # It was already empty
+         logging.info("BIN_001 was already empty or in an unexpected state for this test.")
+    else: # It doesn't exist
+        logging.error("BIN_001 does not exist for the emptying test.")
+
+    logging.info("\n--- Testing mark_bin_as_empty for a non-existent bin ---")
+    non_existent_empty_attempt = mark_bin_as_empty("BIN_999")
+    if not non_existent_empty_attempt:
+        logging.info("Correctly handled attempt to mark non-existent bin BIN_999 as empty.")
+    else:
+        logging.error("Incorrectly handled non-existent bin for mark_bin_as_empty.")

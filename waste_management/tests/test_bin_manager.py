@@ -9,6 +9,7 @@ from waste_management.bin_manager import (
     get_bin,
     update_bin_from_sensor_data,
     list_bins,
+    mark_bin_as_empty, # Added for testing
     _bins # For direct manipulation in setUp/tearDown
 )
 
@@ -128,6 +129,41 @@ class TestBinManager(unittest.TestCase):
         self.assertEqual(list_bins(status_filter='FULL'), [bin_full])
         self.assertEqual(list_bins(status_filter='NEEDS_MAINTENANCE'), [])
         self.assertEqual(list_bins(status_filter='NON_EXISTENT_STATUS'), [])
+
+    def test_mark_bin_as_empty(self):
+        """Test marking a bin as empty and attempting to mark a non-existent bin."""
+        # Scenario 1: Successfully marking an existing bin as empty
+        bin_id_existing = "bin_to_empty"
+        add_bin(bin_id=bin_id_existing, location={'lat': 50, 'lon': 50}, capacity_gallons=100.0)
+
+        # Update it to be 'FULL' so we can see the change
+        updated_bin = update_bin_from_sensor_data(bin_id=bin_id_existing, new_fill_level=90.0)
+        self.assertIsNotNone(updated_bin)
+        self.assertEqual(updated_bin.status, 'FULL')
+        original_last_updated = updated_bin.last_updated
+
+        # Introduce a tiny delay to ensure the timestamp can change if the operation is very fast.
+        # This might not always be necessary with high-precision timestamps but is safer.
+        # For most practical purposes on typical systems, datetime.isoformat() resolution changes.
+        # If tests become flaky here, a more robust time mocking/advancing strategy might be needed.
+        # For now, a direct call is usually sufficient.
+
+        emptied_bin = mark_bin_as_empty(bin_id_existing)
+
+        self.assertIsNotNone(emptied_bin, "mark_bin_as_empty should return the bin object.")
+        self.assertEqual(emptied_bin.current_fill_level_gallons, 0.0, "Bin fill level should be 0.0.")
+        self.assertEqual(emptied_bin.status, 'EMPTY', "Bin status should be 'EMPTY'.")
+        self.assertNotEqual(emptied_bin.last_updated, original_last_updated, "last_updated timestamp should have changed.")
+
+        # Verify the change is also reflected in the main store (though mark_bin_as_empty should handle this)
+        stored_bin_after_empty = get_bin(bin_id_existing)
+        self.assertIsNotNone(stored_bin_after_empty)
+        self.assertEqual(stored_bin_after_empty.status, 'EMPTY')
+
+        # Scenario 2: Attempting to mark a non-existent bin as empty
+        bin_id_non_existent = "bin_does_not_exist"
+        result_non_existent = mark_bin_as_empty(bin_id_non_existent)
+        self.assertIsNone(result_non_existent, "Attempting to mark a non-existent bin as empty should return None.")
 
 if __name__ == '__main__':
     unittest.main()

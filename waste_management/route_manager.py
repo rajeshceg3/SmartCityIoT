@@ -1,15 +1,18 @@
 import datetime
+import logging
 import uuid
 from typing import Optional, List, Dict
 
 from .models import CollectionRoute
-from .bin_manager import list_bins as manager_list_bins # Aliased to avoid conflict if we had a local list_bins
-from .bin_manager import add_bin as manager_add_bin # For example usage
-from .bin_manager import update_bin_from_sensor_data as manager_update_bin # For example usage
+from .bin_manager import list_bins as manager_list_bins
+from .bin_manager import add_bin as manager_add_bin
+from .bin_manager import update_bin_from_sensor_data as manager_update_bin
 from .bin_manager import _bins as manager_bins_store # To clear for repeatable examples
+from .bin_manager import mark_bin_as_empty # Added for route completion
 
 # Module-level dictionary to store routes in memory
 _routes: Dict[str, CollectionRoute] = {}
+logger = logging.getLogger(__name__)
 
 def generate_route(assigned_truck_id: str) -> Optional[CollectionRoute]:
     """
@@ -91,98 +94,140 @@ def update_route_status(route_id: str, new_status: str) -> Optional[CollectionRo
 
     if new_status in ['COMPLETED', 'CANCELLED'] and route_instance.completed_at is None:
         route_instance.completed_at = current_time_iso
-        # Potentially, if status becomes 'COMPLETED', we might want to update the bins it collected.
-        # This logic is not specified here but could be an extension.
-        # For example, iterate route_instance.bin_ids_to_collect and set their status to 'EMPTY'.
-
+        if new_status == 'COMPLETED':
+            logger.info(f"Route {route_id} completed. Marking collected bins as empty.")
+            for bin_id in route_instance.bin_ids_to_collect:
+                emptied_bin = mark_bin_as_empty(bin_id)
+                if emptied_bin:
+                    logger.info(f"Bin {bin_id} successfully marked as empty as part of route {route_id} completion.")
+                else:
+                    logger.warning(f"Failed to mark bin {bin_id} as empty for route {route_id} (bin not found).")
     return route_instance
 
 if __name__ == "__main__":
-    print("--- Initializing Route Manager ---")
+    # As in bin_manager, basicConfig is ideally called by the application, not the library.
+    # Placed here for direct script execution.
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
+    logging.info("--- Initializing Route Manager ---")
 
     # Clear any existing bins from bin_manager for a clean example run
     # This is a bit of a hack for example purposes, directly accessing _bins
     manager_bins_store.clear()
     _routes.clear() # Also clear any routes from previous partial runs of this example
 
-    print("\n--- Setting up Bins (via bin_manager) ---")
+    logging.info("\n--- Setting up Bins (via bin_manager) ---")
     try:
         bin1 = manager_add_bin(bin_id="BIN_R01", location={'lat': 10.0, 'lon': 10.0}, capacity_gallons=100.0)
         bin2 = manager_add_bin(bin_id="BIN_R02", location={'lat': 20.0, 'lon': 20.0}, capacity_gallons=100.0)
         bin3 = manager_add_bin(bin_id="BIN_R03", location={'lat': 30.0, 'lon': 30.0}, capacity_gallons=100.0)
-        print(f"Added: {bin1.bin_id}, {bin2.bin_id}, {bin3.bin_id}")
+        logging.info(f"Added: {bin1.bin_id}, {bin2.bin_id}, {bin3.bin_id}")
 
         # Make some bins 'FULL'
         manager_update_bin(bin_id="BIN_R01", new_fill_level=90.0) # FULL
         manager_update_bin(bin_id="BIN_R03", new_fill_level=85.0) # FULL
-        print("Updated BIN_R01 and BIN_R03 to be FULL.")
+        logging.info("Updated BIN_R01 and BIN_R03 to be FULL.")
     except ValueError as e:
-        print(f"Error setting up bins: {e}")
+        logging.error(f"Error setting up bins: {e}")
 
-    print("\n--- Generating Route ---")
+    logging.info("\n--- Generating Route ---")
     generated_route = generate_route(assigned_truck_id="TRUCK_A1")
     if generated_route:
-        print(f"Generated Route: {generated_route}")
+        logging.info(f"Generated Route: {generated_route}")
     else:
-        print("No 'FULL' bins found, so no route generated.")
+        logging.info("No 'FULL' bins found, so no route generated.")
 
-    print("\n--- Listing All Routes ---")
+    logging.info("\n--- Listing All Routes ---")
     all_routes = list_routes()
     if all_routes:
         for r in all_routes:
-            print(r)
+            logging.info(r)
     else:
-        print("No routes available.")
+        logging.info("No routes available.")
 
     if generated_route:
         route_to_update_id = generated_route.route_id
-        print(f"\n--- Updating Route {route_to_update_id} to 'IN_PROGRESS' ---")
+        logging.info(f"\n--- Updating Route {route_to_update_id} to 'IN_PROGRESS' ---")
         updated_route = update_route_status(route_id=route_to_update_id, new_status='IN_PROGRESS')
         if updated_route:
-            print(f"Updated Route: {updated_route}")
+            logging.info(f"Updated Route: {updated_route}")
         else:
-            print(f"Route {route_to_update_id} not found for update.")
+            logging.warning(f"Route {route_to_update_id} not found for update.")
 
-        print(f"\n--- Updating Route {route_to_update_id} to 'COMPLETED' ---")
+        logging.info(f"\n--- Updating Route {route_to_update_id} to 'COMPLETED' ---")
         # Simulate some time passing
         # In a real system, this would happen after some delay
         updated_route = update_route_status(route_id=route_to_update_id, new_status='COMPLETED')
         if updated_route:
-            print(f"Updated Route: {updated_route}")
+            logging.info(f"Updated Route: {updated_route}")
         else:
-            print(f"Route {route_to_update_id} not found for update.")
+            logging.warning(f"Route {route_to_update_id} not found for update.")
 
-        print("\n--- Listing 'COMPLETED' Routes ---")
+        logging.info("\n--- Listing 'COMPLETED' Routes ---")
         completed_routes = list_routes(status_filter='COMPLETED')
         if completed_routes:
             for r_comp in completed_routes:
-                print(r_comp)
+                logging.info(r_comp)
         else:
-            print("No routes are 'COMPLETED'.")
+            logging.info("No routes are 'COMPLETED'.")
 
-    print("\n--- Generating another route (should be None as bins were not re-filled) ---")
+    logging.info("\n--- Listing 'COMPLETED' Routes ---")
+    completed_routes = list_routes(status_filter='COMPLETED')
+    if completed_routes:
+        for r_comp in completed_routes:
+            logging.info(r_comp)
+    else:
+        logging.info("No routes are 'COMPLETED'.")
+
+    # Check status of bins from the completed route (BIN_R01, BIN_R03)
+    # They should now be EMPTY
+    logging.info("\n--- Checking status of bins from completed route ---")
+    if generated_route:
+        for bin_id_completed in generated_route.bin_ids_to_collect:
+            b_status = manager_list_bins() # inefficient, ideally get_bin(bin_id_completed)
+            current_bin_instance = next((b for b in b_status if b.bin_id == bin_id_completed), None)
+            if current_bin_instance:
+                 logging.info(f"Bin {current_bin_instance.bin_id} status after route completion: {current_bin_instance.status}")
+            else:
+                logging.warning(f"Bin {bin_id_completed} not found after route completion check.")
+
+
+    logging.info("\n--- Generating another route (should be None as bins from the first route were emptied) ---")
     another_route = generate_route(assigned_truck_id="TRUCK_A2")
     if not another_route:
-        print("No new route generated, as expected (bins from previous route are still marked FULL in bin_manager).")
-        print("Note: For a real system, completing a route should ideally trigger emptying the bins.")
+        logging.info("No new route generated, as expected (bins from previous route should have been emptied).")
+    else:
+        logging.warning(f"A new route was generated when it wasn't expected: {another_route}")
+        logging.warning("This might indicate bins from the first route weren't properly emptied or new full bins exist.")
+
 
     # Example: Create more full bins and generate a new route
-    print("\n--- Setting up more FULL bins ---")
+    logging.info("\n--- Setting up more FULL bins (BIN_R02, BIN_R04) ---")
     try:
+        # BIN_R02 was added but not filled, fill it now.
+        manager_update_bin(bin_id="BIN_R02", new_fill_level=95.0) # FULL
+        logging.info(f"Filled BIN_R02.")
+
         bin4 = manager_add_bin(bin_id="BIN_R04", location={'lat': 40.0, 'lon': 40.0}, capacity_gallons=50.0)
         manager_update_bin(bin_id="BIN_R04", new_fill_level=45.0) # FULL
-        print(f"Added and filled {bin4.bin_id}")
+        logging.info(f"Added and filled {bin4.bin_id}")
     except ValueError as e:
-        print(f"Error setting up bin4: {e}")
+        logging.error(f"Error setting up more full bins: {e}")
+    except Exception as e: # Catch if manager_update_bin fails for BIN_R02 for some reason
+        logging.error(f"An unexpected error occurred setting up more full bins: {e}")
+
 
     new_generated_route = generate_route(assigned_truck_id="TRUCK_B1")
     if new_generated_route:
-        print(f"New Generated Route (for BIN_R04 and others still full): {new_generated_route}")
+        logging.info(f"New Generated Route (for BIN_R02, BIN_R04): {new_generated_route}")
+        # Verify it includes R02 and R04
+        if "BIN_R02" in new_generated_route.bin_ids_to_collect and "BIN_R04" in new_generated_route.bin_ids_to_collect:
+            logging.info("New route correctly includes BIN_R02 and BIN_R04.")
+        else:
+            logging.warning(f"New route does not include the expected bins. Contains: {new_generated_route.bin_ids_to_collect}")
     else:
-        print("No new route generated despite new full bin (check logic if BIN_R01, R03 are still full).")
-        # Note: The generate_route will pick up BIN_R01 and BIN_R03 again if they haven't been emptied.
-        # This is expected based on current logic.
+        logging.info("No new route generated despite new full bins (BIN_R02, BIN_R04). This is unexpected.")
 
-    print("\n--- Final list of all routes ---")
-    for r in list_routes():
-        print(r)
+
+    logging.info("\n--- Final list of all routes ---")
+    for r_final in list_routes():
+        logging.info(r_final)
