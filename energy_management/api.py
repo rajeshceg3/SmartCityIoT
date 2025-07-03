@@ -1,3 +1,4 @@
+import datetime # Added for datetime.datetime.now()
 from flask import Flask, request, jsonify, render_template
 from dataclasses import asdict
 
@@ -132,6 +133,100 @@ def dashboard():
     """Serves the energy management dashboard HTML page."""
     # This will render energy_management/templates/dashboard.html
     return render_template('dashboard.html')
+
+@app.route('/energy/simulation/run', methods=['POST'])
+def run_energy_simulation_api():
+    """
+    Runs an energy consumption simulation for a given duration.
+    Expects JSON payload: {"duration_hours": float}
+    Returns the total energy consumed by all streetlights.
+    """
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    duration_hours = data.get('duration_hours')
+
+    if duration_hours is None:
+        return jsonify({"error": "Missing 'duration_hours' in payload"}), 400
+
+    if not isinstance(duration_hours, (int, float)):
+        return jsonify({"error": "'duration_hours' must be a number"}), 400
+
+    if duration_hours <= 0:
+        return jsonify({"error": "'duration_hours' must be a positive number"}), 400
+
+    try:
+        total_consumed = streetlight_manager.simulate_energy_consumption(float(duration_hours))
+        return jsonify({"total_energy_consumed_kwh": total_consumed}), 200
+    except Exception as e:
+        # Log the exception for debugging purposes
+        app.logger.error(f"Error during energy simulation: {e}")
+        return jsonify({"error": "An unexpected error occurred during simulation"}), 500
+
+@app.route('/energy/streetlights/<string:light_id>/adaptive', methods=['PUT'])
+def toggle_adaptive_lighting_api(light_id: str):
+    """
+    Enables or disables adaptive lighting for a specific streetlight.
+    Expects JSON payload: {"enabled": bool}
+    """
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    enabled_value = data.get('enabled')
+
+    if enabled_value is None:
+        return jsonify({"error": "Missing 'enabled' field in payload"}), 400
+
+    if not isinstance(enabled_value, bool):
+        return jsonify({"error": "'enabled' field must be a boolean"}), 400
+
+    light = streetlight_manager.get_streetlight(light_id)
+    if not light:
+        return jsonify({"error": f"Streetlight with ID '{light_id}' not found"}), 404
+
+    try:
+        light.adaptive_lighting_enabled = enabled_value
+        light.last_updated = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        # No need to call _streetlights[light_id] = light, direct modification
+        # streetlight_manager._streetlights[light_id] = light # This would be needed if manager copied objects
+
+        return jsonify(asdict(light)), 200
+    except Exception as e:
+        app.logger.error(f"Error toggling adaptive lighting for {light_id}: {e}")
+        return jsonify({"error": "An unexpected error occurred"}), 500
+
+@app.route('/energy/adaptive_lighting/apply', methods=['POST'])
+def apply_adaptive_lighting_schedule_api():
+    """
+    Applies the adaptive lighting schedule based on the provided hour.
+    Expects JSON payload: {"current_time_hour": int}
+    """
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    current_time_hour = data.get('current_time_hour')
+
+    if current_time_hour is None:
+        return jsonify({"error": "Missing 'current_time_hour' in payload"}), 400
+
+    if not isinstance(current_time_hour, int):
+        return jsonify({"error": "'current_time_hour' must be an integer"}), 400
+
+    # Validation for current_time_hour (0-23) is handled by the manager function,
+    # but a basic check here can be good practice too.
+    # If manager raises ValueError, it will be caught by the generic Exception.
+
+    try:
+        result_summary = streetlight_manager.apply_adaptive_lighting_schedule(current_time_hour)
+        return jsonify(result_summary), 200
+    except ValueError as e: # Catch specific error from manager for bad hour
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        app.logger.error(f"Error applying adaptive lighting schedule: {e}")
+        return jsonify({"error": "An unexpected error occurred"}), 500
 
 if __name__ == '__main__':
     # Sample data for direct testing of this API module

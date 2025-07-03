@@ -98,6 +98,109 @@ def report_streetlight_fault(light_id: str, description: str) -> Optional[Street
     # print(f"Fault reported for {light_id}: {description}") # Placeholder for logging
     return light
 
+def simulate_energy_consumption(duration_hours: float) -> float:
+    """
+    Simulates energy consumption for all 'ON' streetlights.
+
+    Iterates through all streetlights, calculates energy consumed based on
+    power_consumption_watts, brightness_level, and duration_hours.
+    Updates the current_energy_usage for each streetlight and returns the
+    total energy consumed in this simulation run.
+
+    Args:
+        duration_hours: The duration of the simulation in hours.
+
+    Returns:
+        The total energy consumed by all lights in kWh.
+    """
+    total_energy_consumed_kwh = 0.0
+
+    if duration_hours <= 0:
+        # No consumption if duration is zero or negative
+        return 0.0
+
+    for light in _streetlights.values():
+        if light.status == 'ON' and \
+           light.power_consumption_watts is not None and \
+           light.power_consumption_watts > 0:
+
+            # Energy (kWh) = (Power (Watts) * Brightness (%) * Time (hours)) / 1000
+            # Brightness is a percentage, so divide by 100
+            energy_kwh = (light.power_consumption_watts * \
+                          (light.brightness_level / 100.0) * \
+                          duration_hours) / 1000.0
+
+            light.current_energy_usage += energy_kwh
+            total_energy_consumed_kwh += energy_kwh
+            # No need to call _streetlights[light.light_id] = light as we are modifying the object directly
+
+    return total_energy_consumed_kwh
+
+def apply_adaptive_lighting_schedule(current_time_hour: int) -> Dict:
+    """
+    Applies an adaptive lighting schedule to streetlights with the feature enabled.
+
+    Adjusts status and brightness based on the current hour of the day.
+    - 0-5 AM (0-5): ON, Brightness 50%
+    - 8 AM-5 PM (8-17): OFF, Brightness 0%
+    - 6-7 AM (6-7) or 6 PM-11 PM (18-23): ON, Brightness 100%
+    - Other times: No change.
+
+    Updates 'last_updated' for any lights that are changed.
+
+    Args:
+        current_time_hour: The current hour of the day (0-23).
+
+    Returns:
+        A dictionary summarizing the changes, including the count of updated
+        lights and details for each.
+    """
+    if not 0 <= current_time_hour <= 23:
+        raise ValueError("current_time_hour must be between 0 and 23.")
+
+    updated_lights_count = 0
+    update_details = []
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    for light in _streetlights.values():
+        if not light.adaptive_lighting_enabled:
+            continue
+
+        original_status = light.status
+        original_brightness = light.brightness_level
+
+        new_status = original_status
+        new_brightness = original_brightness
+
+        if 0 <= current_time_hour <= 5: # Late Night (0-5 AM)
+            new_status = 'ON'
+            new_brightness = 50
+        elif 8 <= current_time_hour <= 17: # Day Time (8 AM - 5 PM)
+            new_status = 'OFF'
+            new_brightness = 0
+        elif (6 <= current_time_hour <= 7) or (18 <= current_time_hour <= 23): # Evening/Early Morning
+            new_status = 'ON'
+            new_brightness = 100
+        # else: No change for other times, as per requirement.
+
+        if new_status != original_status or new_brightness != original_brightness:
+            light.status = new_status
+            light.brightness_level = new_brightness
+            light.last_updated = now_iso
+            # _streetlights[light.light_id] = light # Not strictly necessary, modifying object in place
+
+            updated_lights_count += 1
+            update_details.append({
+                "light_id": light.light_id,
+                "new_status": new_status,
+                "new_brightness": new_brightness
+            })
+
+    return {
+        "updated_lights": updated_lights_count,
+        "details": update_details
+    }
+
 # Helper function for tests to clear data
 def _reset_streetlights_data():
     _streetlights.clear()
