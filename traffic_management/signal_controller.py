@@ -1,5 +1,6 @@
 # This file will contain the logic for controlling traffic signals.
 # This could include algorithms for adaptive signal timing, pedestrian detection, etc.
+from typing import Optional # Added Optional for type hinting
 
 from .models import TrafficSignal # EmergencyVehicle is not directly used by controller yet, but models.py is updated
 
@@ -56,7 +57,7 @@ class SignalController:
         except ValueError as e:
             print(f"SignalController '{self.controller_id}': Error changing state for signal '{signal_id}': {e}")
 
-    def handle_emergency_vehicle_approach(self, vehicle_id: str, vehicle_location: tuple, vehicle_route: list):
+    def handle_emergency_vehicle_approach(self, vehicle_id: str, vehicle_location: tuple, vehicle_route: list, emergency_state: Optional[dict] = None):
         """
         Handles an approaching emergency vehicle by prioritizing its route.
         Args:
@@ -64,8 +65,10 @@ class SignalController:
             vehicle_location (tuple): The current location of the vehicle.
             vehicle_route (list): The planned route of the vehicle.
                                   Simplified: first element is the ID of the next signal.
+            emergency_state (Optional[dict]): An explicit state to set the signal to.
+                                              If None, fallback logic is used.
         """
-        print(f"SignalController '{self.controller_id}': Received emergency vehicle approach: ID='{vehicle_id}', Location={vehicle_location}, Route={vehicle_route}")
+        print(f"SignalController '{self.controller_id}': Received emergency vehicle approach: ID='{vehicle_id}', Location={vehicle_location}, Route={vehicle_route}, EmergencyStateProvided={emergency_state is not None}")
         self.active_emergency_mode = True # Activate emergency mode
 
         if not vehicle_route:
@@ -93,27 +96,36 @@ class SignalController:
         # Placeholder: Try to find a "main" and "cross" street aspect and set them.
         # This is a very naive approach.
         # A better approach would be to have pre-defined emergency preemption states for each signal.
-        target_state = {}
-        if "north_south" in relevant_signal.current_state and "east_west" in relevant_signal.current_state:
-            # This is a guess. The actual direction depends on the vehicle's approach relative to the signal.
-            # For now, let's assume we want to make "north_south" green for the EV.
-            # This should be derived from vehicle_route and signal.lanes_controlled.
-            target_state = {"north_south": "green", "east_west": "red"}
-            print(f"SignalController '{self.controller_id}': Attempting to set '{relevant_signal.id}' to {target_state} for EV '{vehicle_id}'.")
-        elif relevant_signal.current_state:
-            # If not the typical N/S E/W, try to set the first aspect to green and others to red (very basic)
-            aspects = list(relevant_signal.current_state.keys())
-            if aspects:
-                target_state[aspects[0]] = "green"
-                for aspect in aspects[1:]:
-                    target_state[aspect] = "red"
-                print(f"SignalController '{self.controller_id}': Attempting to set '{relevant_signal.id}' to {target_state} (first aspect green) for EV '{vehicle_id}'.")
-            else:
-                print(f"SignalController '{self.controller_id}': Signal '{relevant_signal.id}' has no defined aspects in current_state. Cannot determine target state.")
-                return
+        target_state = None
+        if emergency_state is not None and isinstance(emergency_state, dict):
+            target_state = emergency_state
+            print(f"SignalController '{self.controller_id}': Using provided emergency_state {target_state} for signal '{relevant_signal.id}' for EV '{vehicle_id}'.")
         else:
-            print(f"SignalController '{self.controller_id}': Signal '{relevant_signal.id}' has no state aspects defined. Cannot control.")
-            return
+            print(f"SignalController '{self.controller_id}': Warning - No explicit emergency_state provided for EV '{vehicle_id}' at signal '{relevant_signal.id}'. Falling back to naive logic. Provide 'emergency_state' for predictable behavior.")
+            current_signal_aspects = relevant_signal.current_state
+            if not current_signal_aspects: # Check if current_state itself is empty or None
+                 print(f"SignalController '{self.controller_id}': Signal '{relevant_signal.id}' has no current state aspects defined. Cannot determine fallback target state.")
+                 return
+
+            # temp_target_state = {} # This variable was in the prompt but not used, so removed.
+            if "north_south" in current_signal_aspects and "east_west" in current_signal_aspects:
+                # Fallback: set N/S green, E/W red, others red.
+                target_state = {aspect: "red" for aspect in current_signal_aspects.keys()}
+                target_state["north_south"] = "green"
+                # Ensure east_west is red, even if it wasn't in current_signal_aspects (though the check implies it is)
+                if "east_west" in target_state: target_state["east_west"] = "red" # Redundant due to above line, but safe.
+
+            elif current_signal_aspects: # current_signal_aspects is not empty
+                aspect_keys = list(current_signal_aspects.keys())
+                # Fallback: set first aspect to green, others to red
+                target_state = {aspect: "red" for aspect in aspect_keys}
+                if aspect_keys: # Ensure there's at least one aspect
+                    target_state[aspect_keys[0]] = "green"
+
+            if not target_state: # If target_state is still None or empty after fallback logic
+                print(f"SignalController '{self.controller_id}': Signal '{relevant_signal.id}' fallback logic failed to determine a target state (e.g. no aspects). Cannot control.")
+                return
+            print(f"SignalController '{self.controller_id}': Using fallback emergency_state {target_state} for signal '{relevant_signal.id}' for EV '{vehicle_id}'.")
 
         self.set_signal_state(relevant_signal.id, target_state)
 

@@ -91,9 +91,14 @@ def update_route_status(route_id: str, new_status: str) -> Optional[CollectionRo
 
     if new_status in ['COMPLETED', 'CANCELLED'] and route_instance.completed_at is None:
         route_instance.completed_at = current_time_iso
-        # Potentially, if status becomes 'COMPLETED', we might want to update the bins it collected.
-        # This logic is not specified here but could be an extension.
-        # For example, iterate route_instance.bin_ids_to_collect and set their status to 'EMPTY'.
+        if new_status == 'COMPLETED':
+            print(f"Route {route_id} completed. Emptying collected bins: {route_instance.bin_ids_to_collect}")
+            for bin_id_to_empty in route_instance.bin_ids_to_collect:
+                updated_bin = manager_update_bin(bin_id_to_empty, 0.0) # Set fill level to 0
+                if updated_bin:
+                    print(f"Bin {bin_id_to_empty} emptied. New status: {updated_bin.status}, Fill level: {updated_bin.current_fill_level_gallons}")
+                else:
+                    print(f"Warning: Bin {bin_id_to_empty} from route {route_id} not found in bin_manager for emptying.")
 
     return route_instance
 
