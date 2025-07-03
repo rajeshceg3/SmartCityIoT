@@ -11,6 +11,8 @@ class Streetlight:
     brightness_level: int = 0  # Percentage, 0-100
     last_updated: str = field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat())
     power_consumption_watts: Optional[float] = None
+    current_energy_usage: float = 0.0  # Accumulated energy consumption in kWh
+    adaptive_lighting_enabled: bool = False  # Adaptive lighting schedule active
 
     def __post_init__(self):
         if not 0 <= self.brightness_level <= 100:
