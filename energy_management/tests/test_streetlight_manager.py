@@ -293,8 +293,8 @@ class TestApplyAdaptiveLightingSchedule(unittest.TestCase):
         self.assertEqual(self.adapt_light.brightness_level, 100)
         self.assertNotEqual(self.adapt_light.last_updated, self.initial_last_updated_adapt)
 
-        self.assertEqual(result["updated_lights"], 1) # ADAPT01 changed
-        # ADAPTNC03 also changes from ON/50 to ON/100
+        self.assertEqual(result["updated_lights"], 2)
+        self.assertEqual(len(result["details"]), 2)
         detail_ids = [d["light_id"] for d in result["details"]]
         self.assertIn("ADAPT01", detail_ids)
         self.assertIn("ADAPTNC03", detail_ids) # ADAPTNC03 will also be set to 100%
