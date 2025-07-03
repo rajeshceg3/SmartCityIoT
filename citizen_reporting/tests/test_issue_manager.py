@@ -104,25 +104,35 @@ class TestIssueManager(unittest.TestCase):
 
     def test_list_issues_filter_by_status(self):
         """Test filtering issues by status (case-insensitive)."""
-        self._create_sample_issue(status="OPEN") # create_issue sets status to OPEN
+        issue_open = self._create_sample_issue() # Status will be OPEN by default
+
         issue_in_progress = self._create_sample_issue(category="InProgressCategory")
         issue_manager.update_issue_status(issue_in_progress.issue_id, "IN_PROGRESS")
-        self._create_sample_issue(status="CLOSED") # create_issue sets status to OPEN then we update
-        issue_closed = issue_manager.list_issues()[2] # get the third issue
-        issue_manager.update_issue_status(issue_closed.issue_id,"CLOSED")
 
+        issue_to_be_closed = self._create_sample_issue(category="ToBeClosedCategory") # Status will be OPEN initially
+        issue_manager.update_issue_status(issue_to_be_closed.issue_id, "CLOSED")
+
+        # Verify counts first
+        all_issues = issue_manager.list_issues()
+        self.assertEqual(len(all_issues), 3, "Should be three issues in total")
 
         open_issues = issue_manager.list_issues(status_filter="open")
-        self.assertEqual(len(open_issues), 1)
-        self.assertEqual(open_issues[0].status, "OPEN")
+        self.assertEqual(len(open_issues), 1, "Should be one OPEN issue")
+        if open_issues: # Check if list is not empty
+            self.assertEqual(open_issues[0].status, "OPEN")
+            self.assertEqual(open_issues[0].issue_id, issue_open.issue_id)
 
         in_progress_issues = issue_manager.list_issues(status_filter="In_PrOgReSs")
-        self.assertEqual(len(in_progress_issues), 1)
-        self.assertEqual(in_progress_issues[0].status, "IN_PROGRESS")
+        self.assertEqual(len(in_progress_issues), 1, "Should be one IN_PROGRESS issue")
+        if in_progress_issues: # Check if list is not empty
+            self.assertEqual(in_progress_issues[0].status, "IN_PROGRESS")
+            self.assertEqual(in_progress_issues[0].issue_id, issue_in_progress.issue_id)
 
         closed_issues = issue_manager.list_issues(status_filter="CLOSED")
-        self.assertEqual(len(closed_issues),1)
-        self.assertEqual(closed_issues[0].status,"CLOSED")
+        self.assertEqual(len(closed_issues), 1, "Should be one CLOSED issue")
+        if closed_issues: # Check if list is not empty
+            self.assertEqual(closed_issues[0].status, "CLOSED")
+            self.assertEqual(closed_issues[0].issue_id, issue_to_be_closed.issue_id)
 
 
     def test_list_issues_filter_by_category(self):

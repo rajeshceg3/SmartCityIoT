@@ -71,7 +71,8 @@ class TestSignalController(unittest.TestCase):
         # Expected state for signal1 based on current SignalController logic:
         # It tries to set the first listed aspect ("north_south") to green and the second ("east_west") to red.
         # If signal1 has "north_south" and "east_west" aspects defined in its current_state:
-        expected_state_signal1 = {"north_south": "green", "east_west": "red", "pedestrian_button": "off"} # Assuming ped button remains off
+        # The new fallback logic sets all to red, then north_south to green.
+        expected_state_signal1 = {"north_south": "green", "east_west": "red", "pedestrian_button": "red"}
         # If the logic is more generic (first aspect green, rest red):
         # aspects_s1 = list(self.signal1_original_full_state.keys())
         # expected_state_signal1 = {aspects_s1[0]: "green"}
@@ -118,8 +119,8 @@ class TestSignalController(unittest.TestCase):
 
         # Trigger preemption first
         self.controller.handle_emergency_vehicle_approach(vehicle_id, vehicle_location, vehicle_route)
-        # Verify it changed
-        expected_preempted_state_signal1 = {"north_south": "green", "east_west": "red", "pedestrian_button": "off"}
+        # Verify it changed - this uses the fallback logic
+        expected_preempted_state_signal1 = {"north_south": "green", "east_west": "red", "pedestrian_button": "red"}
         self.assertEqual(self.controller.signals["signal_001"].current_state, expected_preempted_state_signal1)
         self.assertTrue(self.controller.active_emergency_mode)
 
@@ -161,6 +162,39 @@ class TestSignalController(unittest.TestCase):
     # def test_update_multiple_small_deltas(self): ...
     # def test_emergency_override(self): ... - this was a different method name
     # def test_get_signal_states(self): ... - this method name changed
+
+    def test_handle_emergency_vehicle_approach_with_explicit_emergency_state(self):
+        """Test EV approach with an explicit emergency_state provided."""
+        vehicle_id = "ambulance_789"
+        vehicle_location = (5, 15)
+        vehicle_route = ["signal_001"] # Target signal1
+
+        # Define a custom emergency state for signal1
+        # signal1 aspects: "north_south", "east_west", "pedestrian_button"
+        explicit_state_for_signal1 = {
+            "north_south": "green",
+            "east_west": "yellow", # Non-standard for preemption, but tests if controller obeys
+            "pedestrian_button": "flashing_yellow"
+        }
+        # Ensure the explicit state is valid for the signal's defined aspects.
+        # If signal1 doesn't have 'pedestrian_button': 'flashing_yellow' as a valid state,
+        # the TrafficSignal.change_state() might reject it or behave unexpectedly.
+        # For this test, we assume these are valid states for demonstration.
+
+        self.controller.handle_emergency_vehicle_approach(
+            vehicle_id,
+            vehicle_location,
+            vehicle_route,
+            emergency_state=explicit_state_for_signal1
+        )
+
+        self.assertEqual(self.controller.signals["signal_001"].current_state, explicit_state_for_signal1,
+                         "Signal 1 state should match the explicit emergency state.")
+        self.assertTrue(self.controller.active_emergency_mode)
+
+        # Ensure signal2 (the unrelated signal) has not changed
+        self.assertEqual(self.controller.signals["signal_002"].current_state, self.signal2_original_full_state,
+                         "Signal 2 state should remain unaffected.")
 
 if __name__ == '__main__':
     unittest.main()

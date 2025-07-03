@@ -12,6 +12,7 @@ from waste_management.route_manager import (
 from waste_management.bin_manager import (
     add_bin as manager_add_bin, # Alias to avoid confusion if we had local add_bin
     update_bin_from_sensor_data as manager_update_bin,
+    get_bin as manager_get_bin, # For verifying bin status after route completion
     _bins as bin_manager_bins # For direct manipulation
 )
 
@@ -167,6 +168,51 @@ class TestRouteManager(unittest.TestCase):
         """Test updating a non-existent route."""
         result = update_route_status(route_id="non_existent_id", new_status="COMPLETED")
         self.assertIsNone(result)
+
+    def test_update_route_status_completed_empties_bins(self):
+        """Test that completing a route empties the collected bins in bin_manager."""
+        # 1. Setup bins
+        bin1_id = "b_comp01"
+        bin2_id = "b_comp02"
+        manager_add_bin(bin_id=bin1_id, location={'lat': 10, 'lon': 10}, capacity_gallons=100)
+        manager_add_bin(bin_id=bin2_id, location={'lat': 20, 'lon': 20}, capacity_gallons=100)
+
+        # 2. Make bins FULL
+        manager_update_bin(bin_id=bin1_id, new_fill_level=90.0) # FULL
+        manager_update_bin(bin_id=bin2_id, new_fill_level=85.0) # FULL
+
+        # 3. Generate route
+        route = generate_route(assigned_truck_id="truck_comp_test")
+        self.assertIsNotNone(route, "Route should be generated for full bins.")
+        self.assertIn(bin1_id, route.bin_ids_to_collect)
+        self.assertIn(bin2_id, route.bin_ids_to_collect)
+
+        # 4. Complete the route
+        update_route_status(route.route_id, 'COMPLETED')
+
+        # 5. Verify bins are emptied
+        bin1_after = manager_get_bin(bin1_id)
+        bin2_after = manager_get_bin(bin2_id)
+
+        self.assertIsNotNone(bin1_after)
+        self.assertEqual(bin1_after.status, 'EMPTY', f"Bin {bin1_id} should be EMPTY after route completion.")
+        self.assertEqual(bin1_after.current_fill_level_gallons, 0.0, f"Bin {bin1_id} fill level should be 0 after route completion.")
+
+        self.assertIsNotNone(bin2_after)
+        self.assertEqual(bin2_after.status, 'EMPTY', f"Bin {bin2_id} should be EMPTY after route completion.")
+        self.assertEqual(bin2_after.current_fill_level_gallons, 0.0, f"Bin {bin2_id} fill level should be 0 after route completion.")
+
+        # Optional: Check a bin not on the route is unaffected
+        bin_not_on_route_id = "b_not_on_route"
+        manager_add_bin(bin_id=bin_not_on_route_id, location={'lat': 30, 'lon': 30}, capacity_gallons=100)
+        manager_update_bin(bin_id=bin_not_on_route_id, new_fill_level=70.0) # FILLING
+        # bin_not_on_route_before = manager_get_bin(bin_not_on_route_id) # Store state before just in case
+
+        # Re-fetch after route completion (though it shouldn't have changed)
+        bin_not_on_route_after = manager_get_bin(bin_not_on_route_id)
+        self.assertIsNotNone(bin_not_on_route_after, "Bin not on route should exist.")
+        self.assertEqual(bin_not_on_route_after.status, 'FILLING', f"Bin {bin_not_on_route_id} status should be unaffected.")
+        self.assertEqual(bin_not_on_route_after.current_fill_level_gallons, 70.0, f"Bin {bin_not_on_route_id} fill level should be unaffected.")
 
 if __name__ == '__main__':
     unittest.main()
