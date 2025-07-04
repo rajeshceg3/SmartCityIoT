@@ -1,13 +1,11 @@
-import datetime # Added for datetime.datetime.now()
-from flask import Flask, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template
 from dataclasses import asdict
 
 from . import streetlight_manager
-from .models import Streetlight # For type hinting and understanding structure
 
-app = Flask(__name__) # This will be used as a Blueprint in main_dashboard
+energy_bp = Blueprint('energy', __name__, template_folder='templates')
 
-@app.route('/streetlights', methods=['GET'])
+@energy_bp.route('/streetlights', methods=['GET'])
 def get_all_streetlights_api():
     """
     Retrieves a list of all streetlights, optionally filtered by status.
@@ -18,7 +16,8 @@ def get_all_streetlights_api():
     lights_as_dicts = [asdict(light) for light in lights_list]
     return jsonify(lights_as_dicts), 200
 
-@app.route('/streetlights', methods=['POST'])
+
+@energy_bp.route('/streetlights', methods=['POST'])
 def create_streetlight_api():
     """
     Creates a new streetlight.
@@ -51,10 +50,10 @@ def create_streetlight_api():
     except ValueError as e: # Handles duplicate light_id or other validation errors from manager/model
         return jsonify({"error": str(e)}), 409 # Conflict or Bad Request
     except Exception as e:
-        app.logger.error(f"Error creating streetlight: {e}")
+        energy_bp.logger.error(f"Error creating streetlight: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
 
-@app.route('/streetlights/<string:light_id>', methods=['GET'])
+@energy_bp.route('/streetlights/<string:light_id>', methods=['GET'])
 def get_specific_streetlight_api(light_id: str):
     """Retrieves a specific streetlight by its ID."""
     light = streetlight_manager.get_streetlight(light_id)
@@ -63,7 +62,7 @@ def get_specific_streetlight_api(light_id: str):
     else:
         return jsonify({"error": f"Streetlight with ID '{light_id}' not found"}), 404
 
-@app.route('/streetlights/<string:light_id>/status', methods=['PUT'])
+@energy_bp.route('/streetlights/<string:light_id>/status', methods=['PUT'])
 def update_streetlight_status_api(light_id: str):
     """
     Updates the status and optionally brightness of a streetlight.
@@ -98,10 +97,10 @@ def update_streetlight_status_api(light_id: str):
     except ValueError as e: # Handles invalid status or brightness from manager/model
         return jsonify({"error": str(e)}), 400
     except Exception as e:
-        app.logger.error(f"Error updating streetlight status: {e}")
+        energy_bp.logger.error(f"Error updating streetlight status: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
 
-@app.route('/streetlights/<string:light_id>/report_fault', methods=['POST'])
+@energy_bp.route('/streetlights/<string:light_id>/report_fault', methods=['POST'])
 def report_streetlight_fault_api(light_id: str):
     """
     Reports a fault for a specific streetlight.
@@ -125,16 +124,16 @@ def report_streetlight_fault_api(light_id: str):
         else:
             return jsonify({"error": f"Streetlight with ID '{light_id}' not found to report fault"}), 404
     except Exception as e:
-        app.logger.error(f"Error reporting fault for streetlight {light_id}: {e}")
+        energy_bp.logger.error(f"Error reporting fault for streetlight {light_id}: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
 
-@app.route('/dashboard')
+@energy_bp.route('/dashboard')
 def dashboard():
     """Serves the energy management dashboard HTML page."""
     # This will render energy_management/templates/dashboard.html
     return render_template('dashboard.html')
 
-@app.route('/energy/simulation/run', methods=['POST'])
+@energy_bp.route('/energy/simulation/run', methods=['POST'])
 def run_energy_simulation_api():
     """
     Runs an energy consumption simulation for a given duration.
@@ -161,10 +160,10 @@ def run_energy_simulation_api():
         return jsonify({"total_energy_consumed_kwh": total_consumed}), 200
     except Exception as e:
         # Log the exception for debugging purposes
-        app.logger.error(f"Error during energy simulation: {e}")
+        energy_bp.logger.error(f"Error during energy simulation: {e}")
         return jsonify({"error": "An unexpected error occurred during simulation"}), 500
 
-@app.route('/energy/streetlights/<string:light_id>/adaptive', methods=['PUT'])
+@energy_bp.route('/energy/streetlights/<string:light_id>/adaptive', methods=['PUT'])
 def toggle_adaptive_lighting_api(light_id: str):
     """
     Enables or disables adaptive lighting for a specific streetlight.
@@ -194,10 +193,10 @@ def toggle_adaptive_lighting_api(light_id: str):
 
         return jsonify(asdict(light)), 200
     except Exception as e:
-        app.logger.error(f"Error toggling adaptive lighting for {light_id}: {e}")
+        energy_bp.logger.error(f"Error toggling adaptive lighting for {light_id}: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
 
-@app.route('/energy/adaptive_lighting/apply', methods=['POST'])
+@energy_bp.route('/energy/adaptive_lighting/apply', methods=['POST'])
 def apply_adaptive_lighting_schedule_api():
     """
     Applies the adaptive lighting schedule based on the provided hour.
@@ -225,18 +224,5 @@ def apply_adaptive_lighting_schedule_api():
     except ValueError as e: # Catch specific error from manager for bad hour
         return jsonify({"error": str(e)}), 400
     except Exception as e:
-        app.logger.error(f"Error applying adaptive lighting schedule: {e}")
+        energy_bp.logger.error(f"Error applying adaptive lighting schedule: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
-
-if __name__ == '__main__':
-    # Sample data for direct testing of this API module
-    try:
-        streetlight_manager._reset_streetlights_data() # Clear previous data
-        streetlight_manager.add_streetlight("SL101", {"lat": 34.0522, "lon": -118.2437}, 70)
-        streetlight_manager.add_streetlight("SL102", {"lat": 34.0530, "lon": -118.2445}, 70)
-        streetlight_manager.update_streetlight_status("SL101", "ON", 80)
-        print("Sample streetlights added for testing energy_management.api")
-    except ValueError as e:
-        print(f"Error adding sample data: {e}")
-
-    app.run(debug=True, port=5003, host='0.0.0.0')

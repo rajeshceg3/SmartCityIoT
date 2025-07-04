@@ -1,282 +1,249 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Energy Management Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; color: #333; }
-        header { background-color: #007bff; color: white; padding: 15px 0; text-align: center; }
-        header h1 { margin: 0; }
-        nav ul { list-style-type: none; padding: 0; text-align: center; background-color: #333; margin: 0; }
-        nav ul li { display: inline; margin-right: 0; }
-        nav ul li a { color: white; text-decoration: none; padding: 15px 20px; display: inline-block; }
-        nav ul li a:hover { background-color: #555; }
-        .container { margin: 20px; padding: 20px; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); border-radius: 8px; }
-        h1, h2, h3 { color: #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
-        th { background-color: #007bff; color: white; }
-        tr:hover { background-color: #f1f1f1; }
-        .controls-section { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
-        .controls-section h2 { margin-top: 0; }
-        .control-group { margin-bottom: 15px; }
-        .control-group label { margin-right: 10px; }
-        .control-group input[type="number"], .control-group input[type="text"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        .control-group button { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .control-group button:hover { background-color: #218838; }
-        .status-message { margin-top: 10px; padding: 10px; border-radius: 4px; }
-        .status-success { background-color: #d4edda; color: #155724; }
-        .status-error { background-color: #f8d7da; color: #721c24; }
-        footer { text-align: center; margin-top: 30px; padding: 20px; background-color: #333; color: white; }
-        .action-button { padding: 5px 10px; font-size: 0.9em; margin-right: 5px;}
-    </style>
-</head>
-<body>
-    <header>
-        <h1>Smart City IoT Platform</h1>
-    </header>
+{% extends "layout.html" %}
 
-    <nav>
-        <ul>
-            <li><a href="/">Home</a></li>
-            <!-- Add other main module links if known -->
-        </ul>
-    </nav>
+{% block title %}
+Energy Management - Smart City OS
+{% endblock %}
 
-    <div class="container">
-        <h1>Streetlight Management Dashboard</h1>
+{% block content %}
+<div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold text-primary-dark mb-6 text-center">Energy Management Dashboard</h1>
 
-        <h2>Streetlights Overview</h2>
-        <div id="streetlightsContainer">
-            <table>
-                <thead>
+    <!-- Streetlights Overview Section -->
+    <div class="bg-white p-6 rounded-lg shadow-xl mb-8">
+        <h2 class="text-2xl font-semibold text-primary mb-4">Streetlights Overview</h2>
+        <div id="streetlightsContainer" class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead class="bg-secondary-lightest text-secondary-darker uppercase text-sm leading-normal">
                     <tr>
-                        <th>ID</th>
-                        <th>Location (Lat, Lon)</th>
-                        <th>Status</th>
-                        <th>Brightness (%)</th>
-                        <th>Power (W)</th>
-                        <th>Energy Usage (kWh)</th>
-                        <th>Adaptive Lighting</th>
-                        <th>Actions (Adaptive)</th>
+                        <th class="py-3 px-6 text-left border-b border-secondary-light">ID</th>
+                        <th class="py-3 px-6 text-left border-b border-secondary-light">Location</th>
+                        <th class="py-3 px-6 text-center border-b border-secondary-light">Status</th>
+                        <th class="py-3 px-6 text-center border-b border-secondary-light">Brightness (%)</th>
+                        <th class="py-3 px-6 text-right border-b border-secondary-light">Power (W)</th>
+                        <th class="py-3 px-6 text-right border-b border-secondary-light">Energy (kWh)</th>
+                        <th class="py-3 px-6 text-center border-b border-secondary-light">Adaptive</th>
+                        <th class="py-3 px-6 text-center border-b border-secondary-light">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="streetlightsTableBody">
-                    <!-- Streetlight data will be populated here by JavaScript -->
+                <tbody id="streetlightsTableBody" class="text-secondary-dark text-sm font-light">
+                    <!-- Rows will be populated by JS -->
                 </tbody>
             </table>
-            <p id="streetlightsLoadingMsg">Loading streetlights...</p>
-        </div>
-
-        <div class="controls-section">
-            <h2>Energy Simulation</h2>
-            <div class="control-group">
-                <label for="duration_hours">Duration (hours):</label>
-                <input type="number" id="duration_hours" name="duration_hours" min="0.1" step="0.1" value="1">
-                <button id="runSimulationBtn">Run Simulation</button>
+            <div id="streetlightsLoadingMsg" class="text-center py-4 text-primary">
+                <svg class="animate-spin h-6 w-6 text-primary inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading streetlights...
             </div>
-            <div id="simulationResult" class="status-message" style="display:none;"></div>
         </div>
-
-        <div class="controls-section">
-            <h2>Adaptive Lighting Schedule</h2>
-            <div class="control-group">
-                <label for="current_time_hour">Current Hour (0-23):</label>
-                <input type="number" id="current_time_hour" name="current_time_hour" min="0" max="23" step="1" value="12">
-                <button id="applyScheduleBtn">Apply Schedule</button>
-            </div>
-            <div id="scheduleResult" class="status-message" style="display:none;"></div>
-        </div>
-
-        <p style="margin-top: 20px;"><a href="/">Return to Main Dashboard</a></p>
     </div>
 
-    <footer>
-        <p>&copy; 2024 SmartCityIoT Project</p>
-    </footer>
+    <!-- Controls Section -->
+    <div class="grid md:grid-cols-2 gap-8">
+        <!-- Energy Simulation Card -->
+        <div class="bg-white p-6 rounded-lg shadow-xl">
+            <h2 class="text-2xl font-semibold text-primary mb-4">Energy Simulation</h2>
+            <div class="control-group">
+                <label for="duration_hours" class="block text-sm font-medium text-secondary-darker mb-1">Duration (hours):</label>
+                <input type="number" id="duration_hours" name="duration_hours" min="0.1" step="0.1" value="1" class="mt-1 block w-full py-2 px-3 border border-secondary-light bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+            </div>
+            <button id="runSimulationBtn" class="mt-4 w-full bg-success hover:bg-success-dark text-white font-bold py-2 px-4 rounded transition-colors duration-150 ease-in-out">
+                Run Simulation
+            </button>
+            <div id="simulationResult" class="mt-4 text-sm" style="display:none;"></div>
+        </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const streetlightsTableBody = document.getElementById('streetlightsTableBody');
-            const streetlightsLoadingMsg = document.getElementById('streetlightsLoadingMsg');
+        <!-- Adaptive Lighting Schedule Card -->
+        <div class="bg-white p-6 rounded-lg shadow-xl">
+            <h2 class="text-2xl font-semibold text-primary mb-4">Adaptive Lighting Schedule</h2>
+            <div class="control-group">
+                <label for="current_time_hour" class="block text-sm font-medium text-secondary-darker mb-1">Set Current Hour (0-23):</label>
+                <input type="number" id="current_time_hour" name="current_time_hour" min="0" max="23" step="1" value="12" class="mt-1 block w-full py-2 px-3 border border-secondary-light bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+            </div>
+            <button id="applyScheduleBtn" class="mt-4 w-full bg-info hover:bg-info-dark text-white font-bold py-2 px-4 rounded transition-colors duration-150 ease-in-out">
+                Apply Schedule to All
+            </button>
+            <div id="scheduleResult" class="mt-4 text-sm" style="display:none;"></div>
+        </div>
+    </div>
+</div>
 
-            const durationInput = document.getElementById('duration_hours');
-            const runSimulationBtn = document.getElementById('runSimulationBtn');
-            const simulationResultDiv = document.getElementById('simulationResult');
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const streetlightsTableBody = document.getElementById('streetlightsTableBody');
+        const streetlightsLoadingMsg = document.getElementById('streetlightsLoadingMsg');
+        const durationInput = document.getElementById('duration_hours');
+        const runSimulationBtn = document.getElementById('runSimulationBtn');
+        const simulationResultDiv = document.getElementById('simulationResult');
+        const hourInput = document.getElementById('current_time_hour');
+        const applyScheduleBtn = document.getElementById('applyScheduleBtn');
+        const scheduleResultDiv = document.getElementById('scheduleResult');
 
-            const hourInput = document.getElementById('current_time_hour');
-            const applyScheduleBtn = document.getElementById('applyScheduleBtn');
-            const scheduleResultDiv = document.getElementById('scheduleResult');
+        const statusClasses = {
+            'ON': 'bg-success/20 text-success-dark',
+            'OFF': 'bg-secondary/20 text-secondary-dark',
+            'FAULTY': 'bg-danger/20 text-danger-dark'
+        };
 
-            async function loadStreetlights() {
-                streetlightsLoadingMsg.textContent = 'Loading streetlights...';
-                streetlightsLoadingMsg.style.display = 'block';
-                streetlightsTableBody.innerHTML = ''; // Clear existing rows
+        async function loadStreetlights() {
+            streetlightsLoadingMsg.style.display = 'block';
+            streetlightsTableBody.innerHTML = '';
 
-                try {
-                    const response = await fetch('/energy/streetlights');
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    const lights = await response.json();
+            try {
+                const response = await fetch('/energy/streetlights');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const lights = await response.json();
 
-                    if (lights.length === 0) {
-                        streetlightsLoadingMsg.textContent = 'No streetlights found.';
-                        return;
-                    }
-
-                    lights.forEach(light => {
-                        const row = streetlightsTableBody.insertRow();
-                        row.insertCell().textContent = light.light_id;
-                        row.insertCell().textContent = `${light.location.lat.toFixed(4)}, ${light.location.lon.toFixed(4)}`;
-                        row.insertCell().textContent = light.status;
-                        row.insertCell().textContent = light.brightness_level;
-                        row.insertCell().textContent = light.power_consumption_watts !== null ? light.power_consumption_watts : 'N/A';
-                        row.insertCell().textContent = light.current_energy_usage !== null ? light.current_energy_usage.toFixed(3) : 'N/A';
-
-                        const adaptiveStatus = light.adaptive_lighting_enabled ? "Enabled" : "Disabled";
-                        row.insertCell().textContent = adaptiveStatus;
-
-                        const adaptiveCell = row.insertCell();
-                        const toggleBtn = document.createElement('button');
-                        toggleBtn.classList.add('action-button');
-                        toggleBtn.textContent = light.adaptive_lighting_enabled ? "Disable Adaptive" : "Enable Adaptive";
-                        toggleBtn.dataset.lightId = light.light_id;
-                        toggleBtn.dataset.currentState = light.adaptive_lighting_enabled;
-                        toggleBtn.addEventListener('click', handleToggleAdaptive);
-                        adaptiveCell.appendChild(toggleBtn);
-                    });
-                    streetlightsLoadingMsg.style.display = 'none';
-                } catch (error) {
-                    streetlightsLoadingMsg.textContent = `Error loading streetlights: ${error.message}`;
-                    console.error('Error loading streetlights:', error);
-                }
-            }
-
-            async function handleToggleAdaptive(event) {
-                const button = event.target;
-                const lightId = button.dataset.lightId;
-                const currentState = button.dataset.currentState === 'true'; // Convert string to boolean
-                const newState = !currentState;
-
-                button.disabled = true;
-                button.textContent = 'Updating...';
-
-                try {
-                    const response = await fetch(`/energy/streetlights/${lightId}/adaptive`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ enabled: newState })
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-                    }
-                    // const updatedLight = await response.json(); // Use if needed to update more than just the button/status
-
-                    // Update UI directly for this light
-                    const row = button.closest('tr');
-                    if (row) {
-                        row.cells[6].textContent = newState ? "Enabled" : "Disabled"; // Update "Adaptive Lighting" text
-                    }
-                    button.textContent = newState ? "Disable Adaptive" : "Enable Adaptive";
-                    button.dataset.currentState = newState;
-
-                    // Optionally, re-fetch all lights if other data might have changed server-side
-                    // loadStreetlights();
-                    // For now, just updating the specific light's display based on successful toggle.
-
-                } catch (error) {
-                    alert(`Error toggling adaptive lighting for ${lightId}: ${error.message}`);
-                    // Revert button text if needed, or simply re-enable
-                    button.textContent = currentState ? "Disable Adaptive" : "Enable Adaptive";
-                    console.error('Error toggling adaptive lighting:', error);
-                } finally {
-                    button.disabled = false;
-                }
-            }
-
-            runSimulationBtn.addEventListener('click', async function() {
-                const duration = parseFloat(durationInput.value);
-                if (isNaN(duration) || duration <= 0) {
-                    displayMessage(simulationResultDiv, 'Please enter a valid positive duration.', true);
+                if (lights.length === 0) {
+                    streetlightsLoadingMsg.innerHTML = 'No streetlights found.';
                     return;
                 }
 
-                runSimulationBtn.disabled = true;
-                runSimulationBtn.textContent = 'Simulating...';
-                displayMessage(simulationResultDiv, 'Running simulation...', false, true);
+                lights.forEach(light => {
+                    const row = streetlightsTableBody.insertRow();
+                    row.className = 'border-b border-secondary-light hover:bg-primary/5';
+                    
+                    row.insertCell().textContent = light.light_id;
+                    row.cells[0].className = 'py-3 px-6';
 
-                try {
-                    const response = await fetch('/energy/simulation/run', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ duration_hours: duration })
-                    });
-                    const data = await response.json();
-                    if (!response.ok) {
-                        throw new Error(data.error || `HTTP error! status: ${response.status}`);
-                    }
-                    displayMessage(simulationResultDiv, `Total energy consumed: ${data.total_energy_consumed_kwh.toFixed(3)} kWh`, false);
-                    loadStreetlights(); // Refresh data
-                } catch (error) {
-                    displayMessage(simulationResultDiv, `Simulation error: ${error.message}`, true);
-                    console.error('Simulation error:', error);
-                } finally {
-                    runSimulationBtn.disabled = false;
-                    runSimulationBtn.textContent = 'Run Simulation';
-                }
-            });
+                    row.insertCell().textContent = `${light.location.lat.toFixed(4)}, ${light.location.lon.toFixed(4)}`;
+                    row.cells[1].className = 'py-3 px-6';
 
-            applyScheduleBtn.addEventListener('click', async function() {
-                const hour = parseInt(hourInput.value);
-                if (isNaN(hour) || hour < 0 || hour > 23) {
-                    displayMessage(scheduleResultDiv, 'Please enter a valid hour (0-23).', true);
-                    return;
-                }
+                    const statusCell = row.insertCell();
+                    statusCell.className = 'py-3 px-6 text-center';
+                    const statusBadge = document.createElement('span');
+                    statusBadge.textContent = light.status;
+                    statusBadge.className = `px-2 py-1 text-xs font-semibold rounded-full ${statusClasses[light.status] || 'bg-gray-200 text-gray-800'}`;
+                    statusCell.appendChild(statusBadge);
 
-                applyScheduleBtn.disabled = true;
-                applyScheduleBtn.textContent = 'Applying...';
-                displayMessage(scheduleResultDiv, 'Applying schedule...', false, true);
+                    row.insertCell().textContent = light.brightness_level;
+                    row.cells[3].className = 'py-3 px-6 text-center';
 
-                try {
-                    const response = await fetch('/energy/adaptive_lighting/apply', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ current_time_hour: hour })
-                    });
-                    const data = await response.json();
-                    if (!response.ok) {
-                        throw new Error(data.error || `HTTP error! status: ${response.status}`);
-                    }
-                    displayMessage(scheduleResultDiv, `Schedule applied. Lights updated: ${data.updated_lights}. Details: ${JSON.stringify(data.details)}`, false);
-                    loadStreetlights(); // Refresh data
-                } catch (error) {
-                    displayMessage(scheduleResultDiv, `Schedule error: ${error.message}`, true);
-                    console.error('Schedule error:', error);
-                } finally {
-                    applyScheduleBtn.disabled = false;
-                    applyScheduleBtn.textContent = 'Apply Schedule';
-                }
-            });
+                    row.insertCell().textContent = light.power_consumption_watts !== null ? light.power_consumption_watts.toFixed(1) : 'N/A';
+                    row.cells[4].className = 'py-3 px-6 text-right';
 
-            function displayMessage(element, message, isError = false, isLoading = false) {
-                element.textContent = message;
-                element.className = 'status-message'; // Reset classes
-                if (isError) {
-                    element.classList.add('status-error');
-                } else if (!isLoading) { // Don't add success for 'loading...' type messages
-                    element.classList.add('status-success');
-                }
-                element.style.display = 'block';
+                    row.insertCell().textContent = light.current_energy_usage !== null ? light.current_energy_usage.toFixed(3) : 'N/A';
+                    row.cells[5].className = 'py-3 px-6 text-right';
+
+                    const adaptiveStatusCell = row.insertCell();
+                    adaptiveStatusCell.className = 'py-3 px-6 text-center';
+                    adaptiveStatusCell.innerHTML = light.adaptive_lighting_enabled 
+                        ? `<svg class="w-6 h-6 text-success inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`
+                        : `<svg class="w-6 h-6 text-danger inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+
+                    const actionsCell = row.insertCell();
+                    actionsCell.className = 'py-3 px-6 text-center';
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.textContent = light.adaptive_lighting_enabled ? "Disable" : "Enable";
+                    toggleBtn.className = `py-1 px-3 text-xs font-medium rounded-full transition-colors duration-150 ${light.adaptive_lighting_enabled ? 'bg-warning text-white hover:bg-warning-dark' : 'bg-info text-white hover:bg-info-dark'}`;
+                    toggleBtn.dataset.lightId = light.light_id;
+                    toggleBtn.dataset.currentState = light.adaptive_lighting_enabled;
+                    toggleBtn.addEventListener('click', handleToggleAdaptive);
+                    actionsCell.appendChild(toggleBtn);
+                });
+                streetlightsLoadingMsg.style.display = 'none';
+            } catch (error) {
+                streetlightsLoadingMsg.innerHTML = `<span class="text-danger">Error loading streetlights: ${error.message}</span>`;
+                console.error('Error loading streetlights:', error);
             }
+        }
 
-            // Initial load
-            loadStreetlights();
+        async function handleToggleAdaptive(event) {
+            const button = event.target;
+            const lightId = button.dataset.lightId;
+            const currentState = button.dataset.currentState === 'true';
+            const newState = !currentState;
+
+            button.disabled = true;
+            button.textContent = '...';
+
+            try {
+                const response = await fetch(`/energy/streetlights/${lightId}/adaptive`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: newState })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+                loadStreetlights(); // Refresh the entire table for simplicity
+            } catch (error) {
+                alert(`Error toggling adaptive lighting for ${lightId}: ${error.message}`);
+                button.disabled = false;
+                button.textContent = currentState ? "Disable" : "Enable";
+            }
+        }
+
+        runSimulationBtn.addEventListener('click', async function() {
+            const duration = parseFloat(durationInput.value);
+            if (isNaN(duration) || duration <= 0) {
+                displayMessage(simulationResultDiv, 'Please enter a valid positive duration.', 'error');
+                return;
+            }
+            this.disabled = true;
+            this.textContent = 'Simulating...';
+            displayMessage(simulationResultDiv, 'Running simulation...', 'info');
+
+            try {
+                const response = await fetch('/energy/simulation/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ duration_hours: duration })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                displayMessage(simulationResultDiv, `Total energy consumed: ${data.total_energy_consumed_kwh.toFixed(3)} kWh`, 'success');
+                loadStreetlights();
+            } catch (error) {
+                displayMessage(simulationResultDiv, `Simulation error: ${error.message}`, 'error');
+            } finally {
+                this.disabled = false;
+                this.textContent = 'Run Simulation';
+            }
         });
-    </script>
-</body>
-</html>
+
+        applyScheduleBtn.addEventListener('click', async function() {
+            const hour = parseInt(hourInput.value);
+            if (isNaN(hour) || hour < 0 || hour > 23) {
+                displayMessage(scheduleResultDiv, 'Please enter a valid hour (0-23).', 'error');
+                return;
+            }
+            this.disabled = true;
+            this.textContent = 'Applying...';
+            displayMessage(scheduleResultDiv, 'Applying schedule...', 'info');
+
+            try {
+                const response = await fetch('/energy/adaptive_lighting/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current_time_hour: hour })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                displayMessage(scheduleResultDiv, `Schedule applied. ${data.updated_lights} lights updated.`, 'success');
+                loadStreetlights();
+            } catch (error) {
+                displayMessage(scheduleResultDiv, `Schedule error: ${error.message}`, 'error');
+            } finally {
+                this.disabled = false;
+                this.textContent = 'Apply Schedule to All';
+            }
+        });
+
+        function displayMessage(element, message, type) {
+            const typeClasses = {
+                'success': 'bg-success/10 border-success text-success-dark',
+                'error': 'bg-danger/10 border-danger text-danger-dark',
+                'info': 'bg-info/10 border-info text-info-dark'
+            };
+            element.innerHTML = message;
+            element.className = `p-3 rounded-md border ${typeClasses[type] || 'bg-gray-100 border-gray-300 text-gray-800'}`;
+            element.style.display = 'block';
+        }
+
+        loadStreetlights();
+    });
+</script>
+{% endblock %}

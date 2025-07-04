@@ -1,382 +1,268 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Issues Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <!-- Apply Tailwind config for CDN -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
-    <script>
-        // Config is inherited from layout.html, but good to have a fallback or for standalone viewing
-        if (typeof tailwind === 'undefined' || typeof tailwind.config === 'undefined') {
-            window.tailwind = {
-                config: { // Minimal config for this page if layout.html's doesn't load
-                  theme: {
-                    extend: {
-                      colors: {
-                        primary: { DEFAULT: '#3B82F6', dark: '#2563EB' },
-                        secondary: { DEFAULT: '#6B7280', light: '#D1D5DB', dark: '#4B5563', darker: '#374151', lightest: '#F9FAFB' },
-                        success: { DEFAULT: '#10B981', dark: '#059669' },
-                        error: { DEFAULT: '#EF4444', dark: '#DC2626' },
-                        warning: { DEFAULT: '#F59E0B', dark: '#D97706' },
-                        info: { DEFAULT: '#6366F1', dark: '#4F46E5' }
-                      },
-                      fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                      },
-                       animation: { fadeIn: 'fadeIn 0.5s ease-out forwards' },
-                       keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } } }
-                    }
-                  }
-                }
-            };
-        } else { // If layout.html already defined it, ensure our extended colors/animations are merged or available
-             tailwind.config.theme.extend.colors.primary = tailwind.config.theme.extend.colors.primary || { DEFAULT: '#3B82F6', dark: '#2563EB' };
-             tailwind.config.theme.extend.colors.secondary = tailwind.config.theme.extend.colors.secondary|| { DEFAULT: '#6B7280', light: '#D1D5DB', dark: '#4B5563', darker: '#374151', lightest: '#F9FAFB' };
-             tailwind.config.theme.extend.colors.success = tailwind.config.theme.extend.colors.success || { DEFAULT: '#10B981', dark: '#059669' };
-             tailwind.config.theme.extend.colors.error = tailwind.config.theme.extend.colors.error || { DEFAULT: '#EF4444', dark: '#DC2626' };
-             tailwind.config.theme.extend.colors.warning = tailwind.config.theme.extend.colors.warning || { DEFAULT: '#F59E0B', dark: '#D97706' };
-             tailwind.config.theme.extend.colors.info = tailwind.config.theme.extend.colors.info || { DEFAULT: '#6366F1', dark: '#4F46E5' };
-             tailwind.config.theme.extend.fontFamily.sans = tailwind.config.theme.extend.fontFamily.sans || ['Inter', 'system-ui', 'sans-serif'];
-             tailwind.config.theme.extend.animation = tailwind.config.theme.extend.animation || { fadeIn: 'fadeIn 0.5s ease-out forwards' };
-             tailwind.config.theme.extend.keyframes = tailwind.config.theme.extend.keyframes || { fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } } };
-        }
-      </script>
-</head>
-<body class="bg-secondary-light font-sans"> {/* layout.html already has animate-fadeIn on main content block */}
-    <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl max-w-6xl mx-auto mt-10 mb-10">
-        <h1 class="text-3xl font-bold text-center text-primary-dark mb-8">Issues Dashboard</h1>
+{% extends "layout.html" %}
 
-        <div class="mb-8 p-6 bg-white rounded-lg shadow-lg border border-secondary-light">
-            <h2 class="text-xl font-semibold text-primary mb-4 text-center">Issue Categories Overview</h2>
-            <div style="height: 300px;">
-                <canvas id="issueCategoryChart" role="img" aria-label="Bar chart showing number of issues per category"></canvas>
-            </div>
+{% block title %}
+Issues Dashboard - Smart City OS
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold text-primary-dark mb-6 text-center">Citizen Issues Dashboard</h1>
+
+    <!-- Chart Section -->
+    <div class="mb-8 p-6 bg-white rounded-lg shadow-xl border border-secondary-light">
+        <h2 class="text-xl font-semibold text-primary mb-4 text-center">Issue Categories Overview</h2>
+        <div class="h-72">
+            <canvas id="issueCategoryChart" role="img" aria-label="Bar chart showing number of issues per category"></canvas>
         </div>
+    </div>
 
-        <div class="bg-gray-50 p-6 rounded-lg border border-secondary-light mb-8 flex flex-wrap gap-6 items-end">
-            <div class="flex flex-col gap-2 min-w-[180px] flex-grow">
-                <label for="startDateFilter" class="font-semibold text-secondary-dark text-sm">Start Date:</label>
-                <input type="date" id="startDateFilter" class="p-2.5 border border-secondary-light rounded-md shadow-sm focus:ring-primary focus:border-primary focus:ring-opacity-50 text-sm transition-all duration-150 ease-in-out">
-            </div>
-            <div class="flex flex-col gap-2 min-w-[180px] flex-grow">
-                <label for="endDateFilter" class="font-semibold text-secondary-dark text-sm">End Date:</label>
-                <input type="date" id="endDateFilter" class="p-2.5 border border-secondary-light rounded-md shadow-sm focus:ring-primary focus:border-primary focus:ring-opacity-50 text-sm transition-all duration-150 ease-in-out">
-            </div>
-            <div class="flex flex-col gap-2 min-w-[180px] flex-grow">
-                <label for="statusFilter" class="font-semibold text-secondary-dark text-sm">Status:</label>
-                <select id="statusFilter" class="p-2.5 border border-secondary-light rounded-md shadow-sm focus:ring-primary focus:border-primary focus:ring-opacity-50 text-sm transition-all duration-150 ease-in-out">
-                    <option value="">All</option>
+    <!-- Filters Section -->
+    <div class="bg-white p-6 rounded-lg shadow-xl border border-secondary-light mb-8">
+        <h2 class="text-xl font-semibold text-primary mb-4">Filter Issues</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div>
+                <label for="statusFilter" class="block text-sm font-medium text-secondary-darker">Status</label>
+                <select id="statusFilter" class="mt-1 block w-full py-2 px-3 border border-secondary-light bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                    <option value="">All Statuses</option>
                     <option value="OPEN">Open</option>
                     <option value="IN_PROGRESS">In Progress</option>
                     <option value="RESOLVED">Resolved</option>
                     <option value="CLOSED">Closed</option>
                 </select>
             </div>
-            <div class="flex flex-col gap-2 min-w-[180px] flex-grow">
-                <label for="categoryFilter" class="font-semibold text-secondary-dark text-sm">Category:</label>
-                <select id="categoryFilter" class="p-2.5 border border-secondary-light rounded-md shadow-sm focus:ring-primary focus:border-primary focus:ring-opacity-50 text-sm transition-all duration-150 ease-in-out">
-                    <option value="">All</option>
+            <div>
+                <label for="categoryFilter" class="block text-sm font-medium text-secondary-darker">Category</label>
+                <select id="categoryFilter" class="mt-1 block w-full py-2 px-3 border border-secondary-light bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                    <option value="">All Categories</option>
                     <option value="Pothole">Pothole</option>
-                    <option value="Streetlight Out">Streetlight Out</option>
+                    <option value="Streetlight Out">Streetlight Outage</option>
                     <option value="Graffiti">Graffiti</option>
                     <option value="Trash Overflow">Trash Overflow</option>
                     <option value="Damaged Signage">Damaged Signage</option>
                     <option value="Other">Other</option>
                 </select>
             </div>
-            <div class="flex gap-3 items-end pb-1">
-                <button id="applyFiltersButton" class="py-2.5 px-5 text-sm font-medium rounded-md shadow-sm transition-all duration-150 ease-in-out active:scale-95 bg-primary text-white hover:bg-primary-dark focus:ring-2 focus:ring-primary focus:ring-opacity-50">Apply Filters</button>
-                <button id="clearFiltersButton" class="py-2.5 px-5 text-sm font-medium rounded-md shadow-sm transition-all duration-150 ease-in-out active:scale-95 bg-secondary text-white hover:bg-secondary-dark focus:ring-2 focus:ring-secondary focus:ring-opacity-50">Clear Filters & Load All</button>
+            <div class="flex gap-3 items-center pt-6">
+                <button id="applyFiltersButton" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded transition-colors duration-150">Apply</button>
+                <button id="clearFiltersButton" class="w-full bg-secondary hover:bg-secondary-dark text-white font-bold py-2 px-4 rounded transition-colors duration-150">Clear</button>
             </div>
-        </div>
-
-        <div class="shadow-sm rounded-lg overflow-x-auto">
-            <table class="w-full border-collapse">
-                <thead>
-                    <tr>
-                        <th scope="col" class="bg-gray-200 p-3 text-left text-xs font-semibold text-secondary-dark uppercase tracking-wider border-b border-secondary-light cursor-pointer" data-sort-key="issue_id">Issue ID <span class="sort-indicator ml-1 text-primary transition-opacity duration-150 ease-in-out"></span></th>
-                        <th scope="col" class="bg-gray-200 p-3 text-left text-xs font-semibold text-secondary-dark uppercase tracking-wider border-b border-secondary-light cursor-pointer" data-sort-key="timestamp">Timestamp <span class="sort-indicator ml-1 text-primary transition-opacity duration-150 ease-in-out"></span></th>
-                        <th scope="col" class="bg-gray-200 p-3 text-left text-xs font-semibold text-secondary-dark uppercase tracking-wider border-b border-secondary-light cursor-pointer" data-sort-key="category">Category <span class="sort-indicator ml-1 text-primary transition-opacity duration-150 ease-in-out"></span></th>
-                        <th scope="col" class="bg-gray-200 p-3 text-left text-xs font-semibold text-secondary-dark uppercase tracking-wider border-b border-secondary-light">Description</th>
-                        <th scope="col" class="bg-gray-200 p-3 text-left text-xs font-semibold text-secondary-dark uppercase tracking-wider border-b border-secondary-light">Location (Lat, Lon)</th>
-                        <th scope="col" class="bg-gray-200 p-3 text-left text-xs font-semibold text-secondary-dark uppercase tracking-wider border-b border-secondary-light cursor-pointer" data-sort-key="status">Status <span class="sort-indicator ml-1 text-primary transition-opacity duration-150 ease-in-out"></span></th>
-                        <th scope="col" class="bg-gray-200 p-3 text-left text-xs font-semibold text-secondary-dark uppercase tracking-wider border-b border-secondary-light">Reporter ID</th>
-                        <th scope="col" class="bg-gray-200 p-3 text-left text-xs font-semibold text-secondary-dark uppercase tracking-wider border-b border-secondary-light">Photo</th>
-                        <th scope="col" class="bg-gray-200 p-3 text-left text-xs font-semibold text-secondary-dark uppercase tracking-wider border-b border-secondary-light cursor-pointer" data-sort-key="last_updated">Last Updated <span class="sort-indicator ml-1 text-primary transition-opacity duration-150 ease-in-out"></span></th>
-                    </tr>
-                </thead>
-                <tbody id="issuesTableBody">
-                    <tr><td colspan="9" class="p-6 text-center text-secondary-dark">
-                        <div role="status" class="flex items-center justify-center">
-                            <svg aria-hidden="true" class="w-8 h-8 mr-2 text-gray-200 animate-spin dark:text-gray-600 fill-primary" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
-                                <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0492C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
-                            </svg>
-                            <span class="sr-only">Loading...</span>
-                            Loading issues...
-                        </div>
-                    </td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="flex justify-center items-center mt-8 gap-3">
-            <button id="prevPageButton" aria-label="Go to previous page" disabled class="py-2 px-4 text-sm font-medium rounded-md shadow-sm transition-all duration-150 ease-in-out active:scale-95">Previous</button>
-            <span id="pageInfo" class="text-sm text-secondary-dark" aria-live="polite">Page 1 of 1</span>
-            <button id="nextPageButton" aria-label="Go to next page" disabled class="py-2 px-4 text-sm font-medium rounded-md shadow-sm transition-all duration-150 ease-in-out active:scale-95">Next</button>
         </div>
     </div>
 
-    <script>
-        const issuesTableBody = document.getElementById('issuesTableBody');
-        let allIssues = [];
-        let categoryChart = null;
-        let currentSortKey = 'timestamp';
-        let currentSortDirection = 'desc';
-        let currentPage = 1;
-        const issuesPerPage = 10;
+    <!-- Issues Table Section -->
+    <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-secondary-lightest">
+                    <tr>
+                        <th scope="col" class="p-3 text-left text-xs font-semibold text-secondary-darker uppercase tracking-wider cursor-pointer" data-sort-key="issue_id">ID</th>
+                        <th scope="col" class="p-3 text-left text-xs font-semibold text-secondary-darker uppercase tracking-wider cursor-pointer" data-sort-key="timestamp">Reported</th>
+                        <th scope="col" class="p-3 text-left text-xs font-semibold text-secondary-darker uppercase tracking-wider cursor-pointer" data-sort-key="category">Category</th>
+                        <th scope="col" class="p-3 text-left text-xs font-semibold text-secondary-darker uppercase tracking-wider">Description</th>
+                        <th scope="col" class="p-3 text-left text-xs font-semibold text-secondary-darker uppercase tracking-wider cursor-pointer" data-sort-key="status">Status</th>
+                        <th scope="col" class="p-3 text-left text-xs font-semibold text-secondary-darker uppercase tracking-wider cursor-pointer" data-sort-key="last_updated">Updated</th>
+                    </tr>
+                </thead>
+                <tbody id="issuesTableBody">
+                    <!-- JS will populate this -->
+                </tbody>
+            </table>
+             <div id="issuesLoading" class="text-center py-8 text-primary">
+                <svg class="animate-spin h-8 w-8 text-primary inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="mt-2">Loading Issues...</p>
+            </div>
+        </div>
+        <!-- Pagination -->
+        <div class="flex justify-between items-center p-4 bg-white border-t border-secondary-light">
+            <button id="prevPageButton" class="px-4 py-2 text-sm font-medium rounded-md shadow-sm bg-secondary-light hover:bg-secondary-dark text-secondary-darker hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+            <span id="pageInfo" class="text-sm text-secondary-dark">Page 1 of 1</span>
+            <button id="nextPageButton" class="px-4 py-2 text-sm font-medium rounded-md shadow-sm bg-secondary-light hover:bg-secondary-dark text-secondary-darker hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let allIssues = [];
+    let categoryChart = null;
+    let currentSortKey = 'timestamp';
+    let currentSortDirection = 'desc';
+    let currentPage = 1;
+    const issuesPerPage = 10;
 
-        const chartColors = {
-            primary: 'rgba(59, 130, 246, 0.7)', primaryBorder: 'rgba(59, 130, 246, 1)',
-            secondary: 'rgba(107, 114, 128, 0.7)', secondaryBorder: 'rgba(107, 114, 128, 1)',
-            success: 'rgba(16, 185, 129, 0.7)', successBorder: 'rgba(16, 185, 129, 1)',
-            error: 'rgba(239, 68, 68, 0.7)', errorBorder: 'rgba(239, 68, 68, 1)',
-            warning: 'rgba(245, 158, 11, 0.7)', warningBorder: 'rgba(245, 158, 11, 1)',
-            info: 'rgba(99, 102, 241, 0.7)', infoBorder: 'rgba(99, 102, 241, 1)',
-            lightGray: 'rgba(209, 213, 219, 0.7)', lightGrayBorder: 'rgba(209, 213, 219, 1)',
-        };
-        const chartBackgroundColorList = [ chartColors.primary, chartColors.success, chartColors.info, chartColors.warning, chartColors.secondary, chartColors.error, chartColors.lightGray ];
-        const chartBorderColorList = [ chartColors.primaryBorder, chartColors.successBorder, chartColors.infoBorder, chartColors.warningBorder, chartColors.secondaryBorder, chartColors.errorBorder, chartColors.lightGrayBorder ];
+    const elements = {
+        tableBody: document.getElementById('issuesTableBody'),
+        loadingDiv: document.getElementById('issuesLoading'),
+        applyFiltersBtn: document.getElementById('applyFiltersButton'),
+        clearFiltersBtn: document.getElementById('clearFiltersButton'),
+        statusFilter: document.getElementById('statusFilter'),
+        categoryFilter: document.getElementById('categoryFilter'),
+        prevPageBtn: document.getElementById('prevPageButton'),
+        nextPageBtn: document.getElementById('nextPageButton'),
+        pageInfo: document.getElementById('pageInfo'),
+        chartCanvas: document.getElementById('issueCategoryChart')
+    };
 
-        const enabledButtonClasses = ['bg-primary', 'text-white', 'hover:bg-primary-dark'];
-        const disabledButtonClasses = ['bg-secondary-light', 'text-secondary', 'cursor-not-allowed'];
-        // Added transition-all and active:scale-95 to commonButtonClasses for pagination
-        const commonButtonClasses = ['py-2', 'px-4', 'text-sm', 'font-medium', 'rounded-md', 'shadow-sm', 'transition-all', 'duration-150', 'ease-in-out', 'active:scale-95'];
+    const statusClasses = {
+        'OPEN': 'bg-info/20 text-info-dark',
+        'IN_PROGRESS': 'bg-warning/20 text-warning-dark',
+        'RESOLVED': 'bg-success/20 text-success-dark',
+        'CLOSED': 'bg-secondary/20 text-secondary-darker'
+    };
 
+    const chartColors = {
+        primary: 'rgba(59, 130, 246, 0.6)', primaryBorder: 'rgba(59, 130, 246, 1)',
+        success: 'rgba(16, 185, 129, 0.6)', successBorder: 'rgba(16, 185, 129, 1)',
+        warning: 'rgba(245, 158, 11, 0.6)', warningBorder: 'rgba(245, 158, 11, 1)',
+        danger: 'rgba(239, 68, 68, 0.6)', dangerBorder: 'rgba(239, 68, 68, 1)',
+        info: 'rgba(99, 102, 241, 0.6)', infoBorder: 'rgba(99, 102, 241, 1)',
+        secondary: 'rgba(107, 114, 128, 0.6)', secondaryBorder: 'rgba(107, 114, 128, 1)',
+    };
+    const chartBackgroundColorList = Object.values(chartColors).map(c => c.replace('1)', '0.6)'));
+    const chartBorderColorList = Object.values(chartColors);
 
-        async function initialLoad() {
-            await fetchAndStoreIssues();
-            if (allIssues.length > 0) {
-                 sortIssues(currentSortKey, currentSortDirection, false, allIssues);
-            }
-            renderUI();
+    async function fetchIssues() {
+        elements.loadingDiv.style.display = 'block';
+        elements.tableBody.innerHTML = '';
+        try {
+            const response = await fetch('/issues');
+            if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+            allIssues = await response.json();
+            sortAndRender();
+        } catch (error) {
+            elements.loadingDiv.innerHTML = `<p class="text-danger">Failed to load issues: ${error.message}</p>`;
+        } finally {
+            elements.loadingDiv.style.display = 'none';
         }
+    }
 
-        async function fetchAndStoreIssues() {
-            const url = '/issues';
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    allIssues = [];
-                    issuesTableBody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-error"> <div class="flex flex-col items-center justify-center"> <svg class="w-12 h-12 text-error mb-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v4a1 1 0 102 0V5zm-1 6a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path></svg> Error fetching issues: ${response.statusText} </div> </td></tr>`;
-                    updateCategoryChart([]);
-                    return;
-                }
-                allIssues = await response.json();
-            } catch (error) {
-                allIssues = [];
-                issuesTableBody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-error"> <div class="flex flex-col items-center justify-center"> <svg class="w-12 h-12 text-error mb-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v4a1 1 0 102 0V5zm-1 6a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path></svg> Network error: ${error.message} </div> </td></tr>`;
-                updateCategoryChart([]);
-            }
-        }
-
-        function updateCategoryChart(issues) {
-            const categoryCounts = issues.reduce((acc, issue) => {
-                acc[issue.category] = (acc[issue.category] || 0) + 1;
-                return acc;
-            }, {});
-            const chartLabels = Object.keys(categoryCounts);
-            const chartDataValues = Object.values(categoryCounts);
-
-            const ctx = document.getElementById('issueCategoryChart').getContext('2d');
-            if (categoryChart) {
-                categoryChart.destroy();
-            }
-            let fontFamily = ['Inter', 'system-ui', 'sans-serif'];
-            if (window.tailwind && window.tailwind.config && window.tailwind.config.theme && window.tailwind.config.theme.extend && window.tailwind.config.theme.extend.fontFamily && window.tailwind.config.theme.extend.fontFamily.sans) {
-                 fontFamily = window.tailwind.config.theme.extend.fontFamily.sans;
-            }
-
-
-            categoryChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: chartLabels,
-                    datasets: [{
-                        label: 'Number of Issues',
-                        data: chartDataValues,
-                        backgroundColor: chartLabels.map((_, i) => chartBackgroundColorList[i % chartBackgroundColorList.length]),
-                        borderColor: chartLabels.map((_, i) => chartBorderColorList[i % chartBorderColorList.length]),
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false, animation: { duration: 500 },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, color: tailwind.config.theme.extend.colors.secondary.dark, font: { family: fontFamily } }, grid: { color: tailwind.config.theme.extend.colors.secondary.light } },
-                        x: { ticks: { color: tailwind.config.theme.extend.colors.secondary.dark, font: { family: fontFamily } }, grid: { display: false } }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: tailwind.config.theme.extend.colors.secondary.dark, titleFont: { family: fontFamily, size: 14 }, bodyFont: { family: fontFamily, size: 12 },
-                            padding: 10, cornerRadius: 4, displayColors: false,
-                            callbacks: { label: function(context) { return `Issues: ${context.parsed.y}`; } }
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderUI() {
-            let processedIssues = [...allIssues];
-            const statusFilter = document.getElementById('statusFilter').value;
-            const categoryFilter = document.getElementById('categoryFilter').value;
-            const startDateFilter = document.getElementById('startDateFilter').value;
-            const endDateFilter = document.getElementById('endDateFilter').value;
-
-            processedIssues = allIssues.filter(issue => {
-                const passStatus = !statusFilter || issue.status === statusFilter;
-                const passCategory = !categoryFilter || issue.category === categoryFilter;
-                let passDate = true;
-                if (startDateFilter) passDate = passDate && (new Date(issue.timestamp) >= new Date(startDateFilter));
-                if (endDateFilter) { const endOfDay = new Date(endDateFilter); endOfDay.setHours(23, 59, 59, 999); passDate = passDate && (new Date(issue.timestamp) <= endOfDay); }
-                return passStatus && passCategory && passDate;
-            });
-            updateCategoryChart(processedIssues);
-            sortIssues(currentSortKey, currentSortDirection, false, processedIssues);
-            const totalPages = Math.ceil(processedIssues.length / issuesPerPage);
-            currentPage = Math.min(currentPage, totalPages) || 1;
-            const paginatedIssues = processedIssues.slice((currentPage - 1) * issuesPerPage, currentPage * issuesPerPage);
-            populateTable(paginatedIssues);
-            updatePaginationControls(totalPages);
-        }
-
-        function populateTable(issuesToDisplay) {
-            issuesTableBody.innerHTML = '';
-            if (issuesToDisplay.length === 0) {
-                issuesTableBody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-secondary-dark"> <div class="flex flex-col items-center justify-center"> <svg class="w-16 h-16 text-secondary-light mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg> No issues found matching your criteria. </div> </td></tr>`;
-                return;
-            }
-            issuesToDisplay.forEach((issue, index) => {
-                const row = issuesTableBody.insertRow();
-                let baseRowClasses = 'opacity-0 transform -translate-y-2 transition-all duration-300 ease-out';
-                let hoverClasses = 'hover:bg-primary/10';
-                let stripingClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-                row.className = `${stripingClass} ${hoverClasses} ${baseRowClasses}`; // Removed colorTransition, covered by transition-all
-
-                row.insertCell().textContent = issue.issue_id;
-                row.insertCell().textContent = new Date(issue.timestamp).toLocaleString();
-                row.insertCell().textContent = issue.category;
-                row.insertCell().textContent = issue.description.length > 75 ? issue.description.substring(0, 72) + "..." : issue.description;
-                row.insertCell().textContent = `${issue.location.lat.toFixed(5)}, ${issue.location.lon.toFixed(5)}`;
-                row.insertCell().textContent = issue.status;
-                row.insertCell().textContent = issue.reporter_id || 'N/A';
-                const photoCell = row.insertCell();
-                if (issue.photo_filename) {
-                    const photoLink = document.createElement('a');
-                    photoLink.href = `/uploads/${issue.photo_filename}`;
-                    photoLink.textContent = issue.photo_filename;
-                    photoLink.target = "_blank";
-                    photoLink.className = 'text-primary hover:text-primary-dark hover:underline transition-colors duration-150 ease-in-out'; // Added transition
-                    photoCell.appendChild(photoLink);
-                } else {
-                    photoCell.textContent = 'N/A';
-                }
-                row.insertCell().textContent = new Date(issue.last_updated).toLocaleString();
-                Array.from(row.cells).forEach(cell => {
-                    let existingCellClass = cell.className || '';
-                    cell.className = existingCellClass + ' p-3 border-b border-secondary-light text-sm text-secondary-dark';
-                    if (cell.textContent === 'N/A' && !cell.querySelector('a')) {
-                        cell.classList.add('text-secondary', 'italic', 'text-xs');
-                    }
-                });
-                setTimeout(() => { requestAnimationFrame(() => { row.classList.remove('opacity-0', '-translate-y-2'); }); }, index * 50);
-            });
-        }
-
-        function sortIssues(key, direction, isUserClick = true, issuesArrayToSort = allIssues) {
-             let targetArray = (issuesArrayToSort === allIssues && !document.getElementById('statusFilter').value && !document.getElementById('categoryFilter').value && !document.getElementById('startDateFilter').value && !document.getElementById('endDateFilter').value) ? allIssues : issuesArrayToSort;
-            if (isUserClick) {
-                if (key === currentSortKey) { currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc'; }
-                else { currentSortKey = key; currentSortDirection = 'asc'; }
-            } else { currentSortKey = key; currentSortDirection = direction; }
-            targetArray.sort((a, b) => {
-                let valA = a[key]; let valB = b[key];
-                if (key === 'timestamp' || key === 'last_updated') { valA = new Date(valA).getTime(); valB = new Date(valB).getTime(); }
-                else if (typeof valA === 'string') { valA = valA.toLowerCase(); valB = valB.toLowerCase(); }
-                if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
-                if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
-                return 0;
-            });
-            updateSortIndicators();
-            if (isUserClick) { currentPage = 1; renderUI(); }
-        }
-
-        function updateSortIndicators() {
-            document.querySelectorAll("th[data-sort-key]").forEach(th => {
-                th.removeAttribute('aria-sort');
-                const indicator = th.querySelector(".sort-indicator");
-                if (indicator) {
-                    indicator.style.opacity = 0;
-                    setTimeout(() => {
-                        if (th.dataset.sortKey === currentSortKey) {
-                            indicator.textContent = currentSortDirection === 'asc' ? '▲' : '▼';
-                            th.setAttribute('aria-sort', currentSortDirection === 'asc' ? 'ascending' : 'descending');
-                        } else { indicator.textContent = ''; }
-                        indicator.style.opacity = 1;
-                    }, 150);
-                }
-            });
-        }
-
-        function updatePaginationControls(totalPages) {
-            const pageInfo = document.getElementById('pageInfo');
-            const prevButton = document.getElementById('prevPageButton');
-            const nextButton = document.getElementById('nextPageButton');
-            pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
-            prevButton.disabled = currentPage === 1;
-            prevButton.className = '';
-            prevButton.classList.add(...commonButtonClasses);
-            if (prevButton.disabled) { prevButton.classList.add(...disabledButtonClasses); }
-            else { prevButton.classList.add(...enabledButtonClasses); }
-            nextButton.disabled = currentPage === totalPages || totalPages === 0;
-            nextButton.className = '';
-            nextButton.classList.add(...commonButtonClasses);
-            if (nextButton.disabled) { nextButton.classList.add(...disabledButtonClasses); }
-            else { nextButton.classList.add(...enabledButtonClasses); }
-        }
-
-        document.addEventListener('DOMContentLoaded', initialLoad);
-        document.getElementById('applyFiltersButton').addEventListener('click', () => { currentPage = 1; renderUI(); });
-        document.getElementById('clearFiltersButton').addEventListener('click', () => {
-            document.getElementById('statusFilter').value = ''; document.getElementById('categoryFilter').value = '';
-            document.getElementById('startDateFilter').value = ''; document.getElementById('endDateFilter').value = '';
-            currentPage = 1; currentSortKey = 'timestamp'; currentSortDirection = 'desc';
-            sortIssues(currentSortKey, currentSortDirection, false, allIssues);
-            renderUI();
+    function sortAndRender() {
+        let filteredIssues = allIssues.filter(issue => {
+            const statusMatch = !elements.statusFilter.value || issue.status === elements.statusFilter.value;
+            const categoryMatch = !elements.categoryFilter.value || issue.category === elements.categoryFilter.value;
+            return statusMatch && categoryMatch;
         });
+
+        updateCategoryChart(filteredIssues);
+
+        filteredIssues.sort((a, b) => {
+            let valA = a[currentSortKey];
+            let valB = b[currentSortKey];
+            if (typeof valA === 'string' && (currentSortKey === 'timestamp' || currentSortKey === 'last_updated')) {
+                valA = new Date(valA).getTime();
+                valB = new Date(valB).getTime();
+            } else if (typeof valA === 'string') {
+                valA = valA.toLowerCase();
+                valB = valB.toLowerCase();
+            }
+            if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
+            if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        const totalPages = Math.ceil(filteredIssues.length / issuesPerPage);
+        currentPage = Math.min(currentPage, totalPages) || 1;
+        const paginatedIssues = filteredIssues.slice((currentPage - 1) * issuesPerPage, currentPage * issuesPerPage);
+        
+        renderTable(paginatedIssues);
+        updatePaginationControls(totalPages);
+        updateSortIndicators();
+    }
+
+    function renderTable(issues) {
+        elements.tableBody.innerHTML = '';
+        if (issues.length === 0) {
+            elements.tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-secondary-dark">No issues found matching your criteria.</td></tr>`;
+            return;
+        }
+        issues.forEach(issue => {
+            const row = elements.tableBody.insertRow();
+            row.className = 'border-b border-secondary-light hover:bg-primary/5';
+            row.innerHTML = `
+                <td class="p-3">${issue.issue_id}</td>
+                <td class="p-3">${new Date(issue.timestamp).toLocaleDateString()}</td>
+                <td class="p-3">${issue.category}</td>
+                <td class="p-3 text-sm">${issue.description.substring(0, 50)}${issue.description.length > 50 ? '...' : ''}</td>
+                <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClasses[issue.status] || ''}">${issue.status.replace('_', ' ')}</span></td>
+                <td class="p-3">${new Date(issue.last_updated).toLocaleString()}</td>
+            `;
+        });
+    }
+
+    function updateCategoryChart(issues) {
+        const categoryCounts = issues.reduce((acc, issue) => {
+            acc[issue.category] = (acc[issue.category] || 0) + 1;
+            return acc;
+        }, {});
+        const chartLabels = Object.keys(categoryCounts);
+        const chartDataValues = Object.values(categoryCounts);
+
+        if (categoryChart) categoryChart.destroy();
+        
+        categoryChart = new Chart(elements.chartCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Issues',
+                    data: chartDataValues,
+                    backgroundColor: chartBackgroundColorList,
+                    borderColor: chartBorderColorList,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    function updatePaginationControls(totalPages) {
+        elements.pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
+        elements.prevPageBtn.disabled = currentPage === 1;
+        elements.nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
+    }
+
+    function updateSortIndicators() {
         document.querySelectorAll("th[data-sort-key]").forEach(th => {
-            th.addEventListener('click', () => { sortIssues(th.dataset.sortKey, '', true); });
+            th.innerHTML = th.textContent; // Clear existing indicator
+            if (th.dataset.sortKey === currentSortKey) {
+                th.innerHTML += currentSortDirection === 'asc' ? ' &uarr;' : ' &darr;';
+            }
         });
-        document.getElementById('prevPageButton').addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderUI(); } });
-        document.getElementById('nextPageButton').addEventListener('click', () => {
-            let processedIssues = [...allIssues];
-            const statusFilter = document.getElementById('statusFilter').value; const categoryFilter = document.getElementById('categoryFilter').value;
-            const startDateFilter = document.getElementById('startDateFilter').value; const endDateFilter = document.getElementById('endDateFilter').value;
-            processedIssues = allIssues.filter(issue => {
-                const passStatus = !statusFilter || issue.status === statusFilter; const passCategory = !categoryFilter || issue.category === categoryFilter;
-                let passDate = true;
-                if (startDateFilter) passDate = passDate && (new Date(issue.timestamp) >= new Date(startDateFilter));
-                if (endDateFilter) { const endOfDay = new Date(endDateFilter); endOfDay.setHours(23, 59, 59, 999); passDate = passDate && (new Date(issue.timestamp) <= endOfDay); }
-                return passStatus && passCategory && passDate;
-            });
-            const totalPages = Math.ceil(processedIssues.length / issuesPerPage);
-            if (currentPage < totalPages) { currentPage++; renderUI(); }
+    }
+
+    elements.applyFiltersBtn.addEventListener('click', () => { currentPage = 1; sortAndRender(); });
+    elements.clearFiltersBtn.addEventListener('click', () => {
+        elements.statusFilter.value = '';
+        elements.categoryFilter.value = '';
+        currentPage = 1;
+        sortAndRender();
+    });
+    elements.prevPageBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; sortAndRender(); } });
+    elements.nextPageBtn.addEventListener('click', () => {
+        const totalPages = Math.ceil(allIssues.length / issuesPerPage); // Re-evaluate based on filtered length in sortAndRender
+        if (currentPage < totalPages) { currentPage++; sortAndRender(); }
+    });
+    document.querySelectorAll("th[data-sort-key]").forEach(th => {
+        th.addEventListener('click', () => {
+            const key = th.dataset.sortKey;
+            if (key === currentSortKey) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortKey = key;
+                currentSortDirection = 'asc';
+            }
+            sortAndRender();
         });
-    </script>
-</body>
-</html>
+    });
+
+    fetchIssues();
+});
+</script>
+{% endblock %}

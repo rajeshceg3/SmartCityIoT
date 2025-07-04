@@ -1,46 +1,59 @@
 {% extends "layout.html" %}
 
 {% block title %}
-Home - Smart City Dashboard
+Home - Smart City OS
 {% endblock %}
 
 {% block content %}
-<div class="bg-white p-8 rounded-lg shadow-xl text-center"> {/* This container is part of layout's animate-fadeIn scope */}
-    <h1 class="text-4xl font-bold text-primary-dark mb-6">Welcome to the Smart City OS Dashboard!</h1>
-    <p class="text-lg text-secondary-dark mb-8">
-        This central dashboard provides access to various city management modules.
-        Use the navigation bar above to explore the available services.
+<div class="bg-white p-8 rounded-lg shadow-xl text-center">
+    <h1 class="text-4xl font-bold text-primary-dark mb-4">Welcome to the Smart City OS!</h1>
+    <p class="text-lg text-secondary-dark mb-10">
+        Your central hub for monitoring and managing urban infrastructure.
     </p>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <a href="/citizen/dashboard" class="bg-primary hover:bg-primary-dark text-white font-semibold py-8 px-6 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-xl active:scale-100 flex flex-col items-center">
-            <div class="mb-4">
-                <!-- Placeholder SVG Icon: User/Citizen -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 016-6h6a6 6 0 016 6v1h-3M15 21a3 3 0 00-3-3H9M15 21a3 3 0 013-3h3M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <a href="/citizen/dashboard" class="group bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out border-b-4 border-transparent hover:border-primary">
+            <div class="flex flex-col items-center text-center">
+                <div class="p-4 bg-primary/10 rounded-full mb-4">
+                    <svg class="h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3.004 3.004 0 013.75-2.906z" />
+                    </svg>
+                </div>
+                <h2 class="text-xl font-semibold text-secondary-darker mb-2">Citizen Reporting</h2>
+                <p class="text-sm text-secondary-dark">Manage and respond to citizen-reported issues.</p>
             </div>
-            <h2 class="text-2xl mb-2 font-sans">Citizen Reporting</h2>
-            <p class="font-sans text-sm">View and manage citizen-reported issues.</p>
         </a>
-        <a href="/waste/dashboard" class="bg-success hover:bg-green-600 text-white font-semibold py-8 px-6 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-xl active:scale-100 flex flex-col items-center">
-            <div class="mb-4">
-                <!-- Placeholder SVG Icon: Trash/Waste -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+        <a href="/waste/dashboard" class="group bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out border-b-4 border-transparent hover:border-success">
+            <div class="flex flex-col items-center text-center">
+                <div class="p-4 bg-success/10 rounded-full mb-4">
+                    <svg class="h-10 w-10 text-success" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <h2 class="text-xl font-semibold text-secondary-darker mb-2">Waste Management</h2>
+                <p class="text-sm text-secondary-dark">Optimize waste collection routes and monitor bin status.</p>
             </div>
-            <h2 class="text-2xl mb-2 font-sans">Waste Management</h2>
-            <p class="font-sans text-sm">Monitor bins and optimize collection routes.</p>
         </a>
-        <a href="{{ url_for('traffic_bp.dashboard') }}" class="bg-error hover:bg-red-600 text-white font-semibold py-8 px-6 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-xl active:scale-100 flex flex-col items-center">
-            <div class="mb-4">
-                <!-- Placeholder SVG Icon: Traffic Light -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                </svg>
+        <a href="{{ url_for('traffic_bp.dashboard') }}" class="group bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out border-b-4 border-transparent hover:border-danger">
+            <div class="flex flex-col items-center text-center">
+                <div class="p-4 bg-danger/10 rounded-full mb-4">
+                     <svg class="h-10 w-10 text-danger" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M12.5 4.333a.75.75 0 01.5 1.355v1.666a.75.75 0 01-1.5 0V5.688a.75.75 0 011-1.355zM4.167 4.333a.75.75 0 011 1.355v1.666a.75.75 0 11-1.5 0V5.688a.75.75 0 01.5-1.355zM8.333 2.5a.75.75 0 00-1.5 0v4.167a.75.75 0 001.5 0V2.5zM12.5 10a.75.75 0 01.5 1.355v1.666a.75.75 0 01-1.5 0v-1.666a.75.75 0 011-1.355zM4.167 10a.75.75 0 011 1.355v1.666a.75.75 0 11-1.5 0v-1.666a.75.75 0 01.5-1.355zM8.333 8.333a.75.75 0 00-1.5 0v4.167a.75.75 0 001.5 0v-4.167zM15.25 5.75a.75.75 0 000-1.5h-1.5a.75.75 0 000 1.5h1.5zM15.25 11.75a.75.75 0 000-1.5h-1.5a.75.75 0 000 1.5h1.5z" />
+                    </svg>
+                </div>
+                <h2 class="text-xl font-semibold text-secondary-darker mb-2">Traffic Management</h2>
+                <p class="text-sm text-secondary-dark">Control signals and manage traffic flow in real-time.</p>
             </div>
-            <h2 class="text-2xl mb-2 font-sans">Traffic Management</h2>
-            <p class="font-sans text-sm">Oversee traffic signals and emergency vehicle preemption.</p>
+        </a>
+        <a href="{{ url_for('energy.dashboard') }}" class="group bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out border-b-4 border-transparent hover:border-warning">
+            <div class="flex flex-col items-center text-center">
+                <div class="p-4 bg-warning/10 rounded-full mb-4">
+                    <svg class="h-10 w-10 text-warning" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <h2 class="text-xl font-semibold text-secondary-darker mb-2">Energy Management</h2>
+                <p class="text-sm text-secondary-dark">Monitor and control city-wide energy consumption.</p>
+            </div>
         </a>
     </div>
 </div>
