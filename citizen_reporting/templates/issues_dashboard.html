@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.loadingDiv.style.display = 'block';
         elements.tableBody.innerHTML = '';
         try {
-            const response = await fetch('/issues');
+            const response = await fetch('/citizen/issues');
             if (!response.ok) throw new Error(`Server responded with ${response.status}`);
             allIssues = await response.json();
             sortAndRender();

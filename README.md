@@ -8,10 +8,11 @@ The SmartCityIoT platform consists of several modules, each addressing a specifi
 
 **Core Components:**
 
-*   **Main Dashboard (`main_dashboard.py`):** The central Flask application that serves as the entry point to all modules.
+*   **Main Dashboard (`main_dashboard.py`):** The central Flask application that serves as the entry point to all modules. All four modules are mounted on it: traffic at `/traffic`, energy at `/energy`, citizen reporting at `/citizen`, and waste management at `/waste`.
 *   **Citizen Reporting (`citizen_reporting/`):** Enables citizens to report issues (e.g., potholes, broken streetlights) and officials to track them.
 *   **Waste Management (`waste_management/`):** Simulates smart trash bin monitoring and optimizes waste collection routes.
 *   **Traffic Management (`traffic_management/`):** Provides tools for monitoring traffic signals, managing emergency vehicle preemption, and running traffic simulations.
+*   **Energy Management (`energy_management/`):** Monitors streetlights and applies adaptive lighting.
 
 ## Prerequisites
 
@@ -47,8 +48,8 @@ This platform enables citizens to report various non-emergency issues and city o
     ```bash
     python -m citizen_reporting.api
     ```
-    This typically runs on `http://127.0.0.1:5001/`. The UI would then be accessed at `http://127.0.0.1:5001/citizen` and `http://127.0.0.1:5001/citizen/dashboard`.
-*   **API Endpoints (prefixed by its own server URL, e.g., `http://127.0.0.1:5001` if run standalone, or by the main dashboard URL `/citizen` if fully integrated as a blueprint in future):**
+    This typically runs on `http://127.0.0.1:5001/` and mounts the same blueprint at the same prefix: the UI is at `http://127.0.0.1:5001/citizen/` and `http://127.0.0.1:5001/citizen/dashboard`, and the API is under `http://127.0.0.1:5001/citizen/issues`.
+*   **API Endpoints (under `/citizen`, both standalone and via the main dashboard):**
     *   `POST /issues`: Create a new issue.
         *   Payload: `{"category": "str", "description": "str", "location": {"lat": float, "lon": float}, "reporter_id": "str" (optional), "photo_filename": "str" (optional)}`
     *   `GET /issues`: List all issues (filterable by `status` and `category`).
@@ -77,8 +78,8 @@ This system provides a simulated environment for managing city trash bins and op
     ```bash
     python -m waste_management.api
     ```
-    This typically runs on `http://127.0.0.1:5000/`. The UI would then be accessed at `http://127.0.0.1:5000/dashboard`.
-*   **API Endpoints (prefixed by its own server URL, e.g., `http://127.0.0.1:5000` if run standalone, or by the main dashboard URL `/waste` if fully integrated as a blueprint in future):**
+    This typically runs on `http://127.0.0.1:5000/` and mounts the same blueprint at the same prefix: the UI is at `http://127.0.0.1:5000/waste/dashboard`, and the API is under `http://127.0.0.1:5000/waste/bins` and `/waste/routes`.
+*   **API Endpoints (under `/waste`, both standalone and via the main dashboard):**
     *   `GET /bins`: List all bins (filterable by `status`).
     *   `POST /bins`: Create a new bin.
         *   Payload: `{"bin_id": "str", "location": {"lat": float, "lon": float}, "capacity_gallons": float}`
