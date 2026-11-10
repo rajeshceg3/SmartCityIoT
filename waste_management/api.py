@@ -1,5 +1,5 @@
 import datetime # Not directly used in API functions but good practice if time manipulation was needed
-from flask import Flask, request, jsonify, render_template
+from flask import Blueprint, Flask, current_app, request, jsonify, render_template
 from dataclasses import asdict # To convert dataclass instances to dicts
 
 # Importing from our existing modules
@@ -7,11 +7,11 @@ from .models import TrashBin # Primarily for type hinting and understanding data
 from . import bin_manager # Import the module itself to call its functions
 from . import route_manager # Import the module itself to call its functions
 
-app = Flask(__name__)
+waste_bp = Blueprint('waste', __name__, url_prefix='/waste', template_folder='templates')
 
 # --- Bin Endpoints ---
 
-@app.route('/bins', methods=['GET'])
+@waste_bp.route('/bins', methods=['GET'])
 def get_all_bins_api():
     """
     Retrieves a list of all trash bins, optionally filtered by status.
@@ -23,7 +23,7 @@ def get_all_bins_api():
     bins_as_dicts = [asdict(b) for b in bins_list]
     return jsonify(bins_as_dicts), 200
 
-@app.route('/bins', methods=['POST'])
+@waste_bp.route('/bins', methods=['POST'])
 def create_new_bin_api():
     """
     Creates a new trash bin.
@@ -57,11 +57,11 @@ def create_new_bin_api():
     except ValueError as e: # Handles duplicate bin_id
         return jsonify({"error": str(e)}), 409 # Conflict
     except Exception as e: # Catch any other unexpected errors
-        app.logger.error(f"Error creating bin: {e}")
+        current_app.logger.error(f"Error creating bin: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
 
 
-@app.route('/bins/<string:bin_id>', methods=['GET'])
+@waste_bp.route('/bins/<string:bin_id>', methods=['GET'])
 def get_specific_bin_api(bin_id: str):
     """
     Retrieves a specific trash bin by its ID.
@@ -72,7 +72,7 @@ def get_specific_bin_api(bin_id: str):
     else:
         return jsonify({"error": f"Bin with ID '{bin_id}' not found"}), 404
 
-@app.route('/bins/<string:bin_id>/sensor_data', methods=['PUT'])
+@waste_bp.route('/bins/<string:bin_id>/sensor_data', methods=['PUT'])
 def update_bin_sensor_data_api(bin_id: str):
     """
     Updates the fill level of a specific trash bin from sensor data.
@@ -98,13 +98,13 @@ def update_bin_sensor_data_api(bin_id: str):
     except ValueError as e: # e.g. if fill_level is not a float
          return jsonify({"error": f"Invalid data for fill_level: {e}"}), 400
     except Exception as e: # Catch any other unexpected errors
-        app.logger.error(f"Error updating bin sensor data: {e}")
+        current_app.logger.error(f"Error updating bin sensor data: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
 
 
 # --- Route Endpoints ---
 
-@app.route('/routes', methods=['GET'])
+@waste_bp.route('/routes', methods=['GET'])
 def get_all_routes_api():
     """
     Retrieves a list of all collection routes, optionally filtered by status.
@@ -115,7 +115,7 @@ def get_all_routes_api():
     routes_as_dicts = [asdict(r) for r in routes_list]
     return jsonify(routes_as_dicts), 200
 
-@app.route('/routes/generate', methods=['POST'])
+@waste_bp.route('/routes/generate', methods=['POST'])
 def create_new_route_api():
     """
     Generates a new collection route.
@@ -140,11 +140,11 @@ def create_new_route_api():
             # No full bins were found to generate a route.
             return jsonify({"message": "No full bins to generate a route for at this time."}), 200
     except Exception as e: # Catch any other unexpected errors during route generation
-        app.logger.error(f"Error generating route: {e}")
+        current_app.logger.error(f"Error generating route: {e}")
         return jsonify({"error": "An unexpected error occurred during route generation"}), 500
 
 
-@app.route('/routes/<string:route_id>', methods=['GET'])
+@waste_bp.route('/routes/<string:route_id>', methods=['GET'])
 def get_specific_route_api(route_id: str):
     """
     Retrieves a specific collection route by its ID.
@@ -155,7 +155,7 @@ def get_specific_route_api(route_id: str):
     else:
         return jsonify({"error": f"Route with ID '{route_id}' not found"}), 404
 
-@app.route('/routes/<string:route_id>/status', methods=['PUT'])
+@waste_bp.route('/routes/<string:route_id>/status', methods=['PUT'])
 def update_specific_route_status_api(route_id: str):
     """
     Updates the status of a specific collection route.
@@ -180,10 +180,10 @@ def update_specific_route_status_api(route_id: str):
             # This implies route_id was not found.
             return jsonify({"error": f"Route with ID '{route_id}' not found for status update"}), 404
     except Exception as e: # Catch any other unexpected errors
-        app.logger.error(f"Error updating route status: {e}")
+        current_app.logger.error(f"Error updating route status: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
 
-@app.route('/dashboard')
+@waste_bp.route('/dashboard')
 def dashboard():
     """Serves the main dashboard HTML page."""
     # Assumes 'index.html' is in a 'templates' folder
@@ -195,6 +195,9 @@ def dashboard():
     return render_template('index.html')
 
 if __name__ == '__main__':
+    app = Flask(__name__)
+    app.register_blueprint(waste_bp)
+
     # For demonstration, add some sample data using bin_manager directly.
     # This helps if running the API directly and wanting some initial data.
     # It's important that this is idempotent or handles existing data if the server reloads.

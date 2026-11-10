@@ -175,7 +175,7 @@ Report New Issue - Smart City OS
             };
 
             try {
-                const response = await fetch('/issues', {
+                const response = await fetch('/citizen/issues', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)

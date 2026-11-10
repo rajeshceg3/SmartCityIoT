@@ -32,7 +32,7 @@ else:
     print(f"Warning: APISetupSim did not have 'signals' or it was empty. Global controller will have no pre-registered signals from sim.")
 
 
-traffic_bp = Blueprint('traffic_bp', __name__, url_prefix='/traffic')
+traffic_bp = Blueprint('traffic_bp', __name__, url_prefix='/traffic', template_folder='templates')
 
 # --- API Endpoints ---
 

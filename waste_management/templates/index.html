@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateStatus(elements.generateRouteMsg, 'Generating route...', 'info');
         try {
-            const response = await fetch('/routes/generate', {
+            const response = await fetch('/waste/routes/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ assigned_truck_id: truckId })
@@ -185,20 +185,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || 'Failed to generate route');
             updateStatus(elements.generateRouteMsg, `Route ${result.route_id} created for truck ${result.assigned_truck_id}.`, 'success');
-            fetchAndRender('/routes', elements.routesTableBody, elements.routesLoading, renderRoutes);
-            fetchAndRender('/bins', elements.binsTableBody, elements.binsLoading, renderBins);
+            fetchAndRender('/waste/routes', elements.routesTableBody, elements.routesLoading, renderRoutes);
+            fetchAndRender('/waste/bins', elements.binsTableBody, elements.binsLoading, renderBins);
         } catch (error) {
             updateStatus(elements.generateRouteMsg, error.message, 'error');
         }
     }
 
-    elements.refreshBinsBtn.addEventListener('click', () => fetchAndRender('/bins', elements.binsTableBody, elements.binsLoading, renderBins));
-    elements.refreshRoutesBtn.addEventListener('click', () => fetchAndRender('/routes', elements.routesTableBody, elements.routesLoading, renderRoutes));
+    elements.refreshBinsBtn.addEventListener('click', () => fetchAndRender('/waste/bins', elements.binsTableBody, elements.binsLoading, renderBins));
+    elements.refreshRoutesBtn.addEventListener('click', () => fetchAndRender('/waste/routes', elements.routesTableBody, elements.routesLoading, renderRoutes));
     elements.generateRouteBtn.addEventListener('click', generateRoute);
 
     // Initial Load
-    fetchAndRender('/bins', elements.binsTableBody, elements.binsLoading, renderBins);
-    fetchAndRender('/routes', elements.routesTableBody, elements.routesLoading, renderRoutes);
+    fetchAndRender('/waste/bins', elements.binsTableBody, elements.binsLoading, renderBins);
+    fetchAndRender('/waste/routes', elements.routesTableBody, elements.routesLoading, renderRoutes);
 });
 </script>
 {% endblock %}

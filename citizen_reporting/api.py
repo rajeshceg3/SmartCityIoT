@@ -1,25 +1,23 @@
 import os
-from flask import Flask, request, jsonify, render_template # Ensure render_template is here
+from flask import Blueprint, Flask, request, jsonify, render_template # Ensure render_template is here
 from dataclasses import asdict
 from datetime import datetime # Required for sample data
 
 from . import issue_manager
 from .models import ReportedIssue # For type hinting if needed
 
-app = Flask(__name__)
-# Configure a basic upload folder.
-app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads', 'citizen_reporting')
+citizen_bp = Blueprint('citizen', __name__, url_prefix='/citizen', template_folder='templates')
 
 
 # --- HTML Serving Routes ---
 
-@app.route('/citizen', methods=['GET'])
+@citizen_bp.route('/', methods=['GET'])
 def citizen_form_page():
     """Serves the citizen report submission form."""
     return render_template('citizen_report_form.html')
 
 
-@app.route('/citizen/dashboard', methods=['GET'])
+@citizen_bp.route('/dashboard', methods=['GET'])
 def citizen_dashboard_page():
     """Serves the issues dashboard page."""
     return render_template('issues_dashboard.html')
@@ -27,7 +25,7 @@ def citizen_dashboard_page():
 
 # --- API Endpoints ---
 
-@app.route('/issues', methods=['POST'])
+@citizen_bp.route('/issues', methods=['POST'])
 def create_issue_route():
     """Creates a new issue."""
     if not request.is_json:
@@ -59,7 +57,7 @@ def create_issue_route():
         return jsonify({"error": "An unexpected error occurred"}), 500
 
 
-@app.route('/issues', methods=['GET'])
+@citizen_bp.route('/issues', methods=['GET'])
 def list_issues_route():
     """Lists all issues, with optional filtering."""
     status_filter = request.args.get('status')
@@ -72,7 +70,7 @@ def list_issues_route():
     return jsonify([asdict(issue) for issue in issues]), 200
 
 
-@app.route('/issues/<string:issue_id>', methods=['GET'])
+@citizen_bp.route('/issues/<string:issue_id>', methods=['GET'])
 def get_issue_route(issue_id: str):
     """Retrieves a specific issue by its ID."""
     issue = issue_manager.get_issue(issue_id)
@@ -82,7 +80,7 @@ def get_issue_route(issue_id: str):
         return jsonify({"error": "Issue not found"}), 404
 
 
-@app.route('/issues/<string:issue_id>/status', methods=['PUT'])
+@citizen_bp.route('/issues/<string:issue_id>/status', methods=['PUT'])
 def update_issue_status_route(issue_id: str):
     """Updates the status of an existing issue."""
     if not request.is_json:
@@ -108,6 +106,10 @@ def update_issue_status_route(issue_id: str):
 
 
 if __name__ == '__main__':
+    app = Flask(__name__)
+    app.register_blueprint(citizen_bp)
+    # Configure a basic upload folder.
+    app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads', 'citizen_reporting')
     # Ensure the upload folder exists
     # Using app.root_path to make it relative to the application's root directory
     upload_dir_config = app.config.get('UPLOAD_FOLDER', 'uploads/citizen_reporting')
